@@ -35,6 +35,32 @@ class TournamentService {
     return response.count;
   }
 
+  Future<List<int>> findOrCreateTeams(List<String> teamNames) async {
+    List<int> ids = [];
+    for (final name in teamNames) {
+      final trimmedName = name.trim();
+      if (trimmedName.isEmpty) continue;
+
+      // Try to find
+      final existing = await _client
+          .from('teams')
+          .select('id')
+          .eq('team_name', trimmedName)
+          .maybeSingle();
+      
+      if (existing != null) {
+        ids.add(existing['id']);
+      } else {
+        // Create
+        final created = await _client.from('teams').insert({
+          'team_name': trimmedName
+        }).select('id').single();
+        ids.add(created['id']);
+      }
+    }
+    return ids;
+  }
+
   Future<Tournament> createTournament(String name, DateTime date, List<int> teamIds) async {
     // 1. Create Tournament
     final tResponse = await _client.from('tournaments').insert({
