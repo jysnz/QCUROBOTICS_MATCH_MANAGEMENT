@@ -1,0 +1,18 @@
+{
+  "name": "ui-ux-pro-max",
+  "description": "Comprehensive UI/UX design intelligence and creative asset generation. Includes modules for Brand Identity, Design Systems, Logo Design, CIP, Banners, Social Photos, Icons, and Strategic Slides across 10+ tech stacks.",
+  "version": "1.1.0",
+  "instructions": "GEMINI.md",
+  "settings": [
+    {
+      "name": "pythonPath",
+      "description": "Path to the python executable (e.g., python3 or python)",
+      "default": "python3"
+    },
+    {
+      "name": "nodePath",
+      "description": "Path to the node executable (e.g., node)",
+      "default": "node"
+    }
+  ]
+}

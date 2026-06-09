@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:qcurobotics_match_management/Pages/Auth/auth_widgets.dart';
+import 'package:qcurobotics_match_management/Pages/Dashboard/dashboard_page.dart';
 import 'package:qcurobotics_match_management/Widgets/design_system.dart';
+import 'package:qcurobotics_match_management/Pages/Auth/auth_widgets.dart';
 
 class RegisterPage extends StatefulWidget {
   final String? initialEmail;
@@ -128,7 +129,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Registration Successful',
+                'Account Created!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -138,7 +139,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Your account has been created. Welcome to QCU Robotics!',
+                'Welcome to QCU Robotics. Your technical profile has been successfully initialized.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.4),
@@ -148,8 +149,14 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 32),
               TechnicalButton(
-                label: 'Continue',
-                onTap: () => Navigator.of(dialogContext).pop(),
+                label: 'Continue to Dashboard',
+                onTap: () {
+                  Navigator.of(dialogContext).pop();
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const DashboardPage()),
+                    (route) => false,
+                  );
+                },
               ),
             ],
           ),
@@ -207,6 +214,23 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       final supabase = Supabase.instance.client;
       final user = supabase.auth.currentUser;
+      
+      String? avatarUrl = widget.initialImageUrl;
+
+      // Handle image upload if selected
+      if (_imageFile != null && user != null) {
+        final fileExt = _imageFile!.path.split('.').last;
+        final fileName = '${user.id}.$fileExt';
+        final filePath = 'avatars/$fileName';
+        
+        await supabase.storage.from('user_assets').upload(
+          filePath,
+          _imageFile!,
+          fileOptions: const FileOptions(upsert: true),
+        );
+        
+        avatarUrl = supabase.storage.from('user_assets').getPublicUrl(filePath);
+      }
 
       if (user != null || widget.isGoogleSignUp) {
         final targetUser = user ?? supabase.auth.currentUser;
@@ -221,6 +245,7 @@ class _RegisterPageState extends State<RegisterPage> {
             'email': _emailController.text.trim(),
             'full_name': _nameController.text.trim(),
             'position': _selectedPosition,
+            'avatar_url': avatarUrl,
           });
         }
       } else {
@@ -234,12 +259,12 @@ class _RegisterPageState extends State<RegisterPage> {
         );
 
         if (response.user != null) {
-          // Manually insert into user_accounts in case there's no trigger
           await supabase.from('user_accounts').upsert({
             'id': response.user!.id,
             'email': _emailController.text.trim(),
             'full_name': _nameController.text.trim(),
             'position': _selectedPosition,
+            'avatar_url': avatarUrl,
           });
         }
 
@@ -277,188 +302,229 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: widget.isGoogleSignUp 
-          ? IconButton(
-              icon: const Icon(Icons.logout_rounded, color: Colors.white38),
-              onPressed: () async {
-                await GoogleSignIn().signOut();
-                await Supabase.instance.client.auth.signOut();
-              },
-            )
-          : IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-      ),
-      body: Stack(
-        children: [
-          const AuthBackground(),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      widget.isGoogleSignUp ? 'Complete Profile' : 'Register',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 1.0,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        backgroundColor: kBackground,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          leading: widget.isGoogleSignUp 
+            ? IconButton(
+                icon: const Icon(Icons.logout_rounded, color: Colors.white38),
+                onPressed: () async {
+                  await GoogleSignIn().signOut();
+                  await Supabase.instance.client.auth.signOut();
+                },
+              )
+            : null,
+        ),
+        body: Stack(
+          children: [
+            const AuthBackground(),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        widget.isGoogleSignUp ? 'Complete Profile' : 'Register',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 1.0,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.isGoogleSignUp 
-                        ? 'Setup your profile' 
-                        : 'Create an account',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.3),
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.isGoogleSignUp 
+                          ? 'Setup your profile' 
+                          : 'Create an account',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.3),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                    Center(
-                      child: GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: kAccent.withValues(alpha: 0.3)),
-                          ),
-                          child: Stack(
-                            children: [
-                              CircleAvatar(
-                                radius: 44,
-                                backgroundColor: kSurface,
-                                backgroundImage: _imageFile != null
-                                    ? FileImage(_imageFile!)
-                                    : (widget.initialImageUrl != null
-                                        ? NetworkImage(widget.initialImageUrl!)
-                                        : null),
-                                child: (_imageFile == null && widget.initialImageUrl == null)
-                                    ? const Icon(Icons.person_outline, size: 40, color: Colors.white24)
-                                    : null,
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: kAccent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.camera_alt_outlined, size: 14, color: Colors.white),
+                      const SizedBox(height: 32),
+                      Center(
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: kAccent.withValues(alpha: 0.3)),
+                            ),
+                            child: Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 44,
+                                  backgroundColor: kSurface,
+                                  backgroundImage: _imageFile != null
+                                      ? FileImage(_imageFile!)
+                                      : (widget.initialImageUrl != null
+                                          ? NetworkImage(widget.initialImageUrl!)
+                                          : null),
+                                  child: (_imageFile == null && widget.initialImageUrl == null)
+                                      ? const Icon(Icons.person_outline, size: 40, color: Colors.white24)
+                                      : null,
                                 ),
-                              ),
-                            ],
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: kAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.camera_alt_outlined, size: 14, color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                    AuthGlassCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          AuthTextField(
-                            controller: _emailController,
-                            label: 'Email',
-                            icon: Icons.email_outlined,
-                            keyboardType: TextInputType.emailAddress,
-                            enabled: !widget.isGoogleSignUp,
-                          ),
-                          const SizedBox(height: 16),
-                          AuthTextField(
-                            controller: _nameController,
-                            label: 'Full Name',
-                            icon: Icons.badge_outlined,
-                          ),
-                          const SizedBox(height: 16),
-                          AuthTextField(
-                            controller: _passwordController,
-                            label: 'Password',
-                            icon: Icons.lock_outline,
-                            obscureText: true,
-                          ),
-                          const SizedBox(height: 12),
-                          
-                          _PasswordRequirement(label: '8+ Characters', isValid: _hasMinLength),
-                          _PasswordRequirement(label: 'Uppercase', isValid: _hasUppercase),
-                          _PasswordRequirement(label: 'Number', isValid: _hasNumber),
-                          _PasswordRequirement(label: 'Special Character', isValid: _hasSpecialChar),
-                          
-                          const SizedBox(height: 16),
-                          
-                          AuthTextField(
-                            controller: _confirmPasswordController,
-                            label: 'Confirm Password',
-                            icon: Icons.lock_reset_outlined,
-                            obscureText: true,
-                          ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          const Text('Role', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 8),
-                          
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: kBackground.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(kRadius),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      const SizedBox(height: 32),
+                      AuthGlassCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            AuthTextField(
+                              controller: _emailController,
+                              label: 'Email',
+                              icon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              enabled: !widget.isGoogleSignUp,
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedPosition,
-                                isExpanded: true,
-                                dropdownColor: kSurface,
-                                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: kAccent),
-                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
-                                items: _positions.map((String position) {
-                                  return DropdownMenuItem<String>(
-                                    value: position,
-                                    child: Text(position),
-                                  );
-                                }).toList(),
-                                onChanged: (String? newValue) {
-                                  if (newValue != null) {
-                                    setState(() {
-                                      _selectedPosition = newValue;
-                                    });
-                                  }
-                                },
+                            const SizedBox(height: 16),
+                            AuthTextField(
+                              controller: _nameController,
+                              label: 'Full Name',
+                              icon: Icons.badge_outlined,
+                            ),
+                            const SizedBox(height: 16),
+                            AuthTextField(
+                              controller: _passwordController,
+                              label: 'Password',
+                              icon: Icons.lock_outline,
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            Row(
+                              children: [
+                                const Text('SECURITY CRITERIA', 
+                                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                                const SizedBox(width: 8),
+                                Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.05))),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            
+                            _PasswordRequirement(label: '8+ Characters (Minimum length)', isValid: _hasMinLength),
+                            _PasswordRequirement(label: 'At least 1 Uppercase letter (A-Z)', isValid: _hasUppercase),
+                            _PasswordRequirement(label: 'At least 1 Numeric digit (0-9)', isValid: _hasNumber),
+                            _PasswordRequirement(label: '1 Special Character (@, #, !, etc.)', isValid: _hasSpecialChar),
+                            
+                            const SizedBox(height: 16),
+                            
+                            AuthTextField(
+                              controller: _confirmPasswordController,
+                              label: 'Confirm Password',
+                              icon: Icons.lock_reset_outlined,
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 12),
+                            if (_confirmPasswordController.text.isNotEmpty)
+                              _PasswordRequirement(label: 'Passwords Match', isValid: _passwordsMatch),
+                            
+                            const SizedBox(height: 24),
+                            
+                            const Text('Role', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 8),
+                            
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: kBackground.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(kRadius),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedPosition,
+                                  isExpanded: true,
+                                  dropdownColor: kSurface,
+                                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: kAccent),
+                                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                                  items: _positions.map((String position) {
+                                    return DropdownMenuItem<String>(
+                                      value: position,
+                                      child: Text(position),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _selectedPosition = newValue;
+                                      });
+                                    }
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 32),
-                          AuthButton(
-                            label: widget.isGoogleSignUp ? 'Complete Profile' : 'Create Account',
-                            onPressed: _register,
-                            isLoading: _isRegistering,
-                          ),
-                        ],
+                            const SizedBox(height: 32),
+                            AuthButton(
+                              label: widget.isGoogleSignUp ? 'Complete Profile' : 'Create Account',
+                              onPressed: _register,
+                              isLoading: _isRegistering,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 32),
+                      if (!widget.isGoogleSignUp)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Already have an account?",
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              style: TextButton.styleFrom(
+                                foregroundColor: kAccent,
+                                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                              ),
+                              child: const Text('Login'),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

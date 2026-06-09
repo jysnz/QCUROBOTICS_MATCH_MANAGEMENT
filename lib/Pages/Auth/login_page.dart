@@ -61,6 +61,9 @@ class _LoginPageState extends State<LoginPage> {
         serverClientId: webClientId,
       );
 
+      // Force account selection by signing out first
+      await googleSignIn.signOut();
+
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         setState(() => _isLoading = false);
@@ -74,11 +77,34 @@ class _LoginPageState extends State<LoginPage> {
       if (accessToken == null) throw 'No Access Token found.';
       if (idToken == null) throw 'No ID Token found.';
 
-      await Supabase.instance.client.auth.signInWithIdToken(
+      final res = await Supabase.instance.client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
       );
+
+      // Check if user has a profile
+      if (res.user != null) {
+        final profile = await Supabase.instance.client
+            .from('user_accounts')
+            .select()
+            .eq('id', res.user!.id)
+            .maybeSingle();
+            
+        if (profile == null && mounted) {
+          // If no profile, navigate to RegisterPage to complete profile
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => RegisterPage(
+                isGoogleSignUp: true,
+                initialEmail: res.user!.email,
+                initialName: res.user!.userMetadata?['full_name'],
+                initialImageUrl: res.user!.userMetadata?['avatar_url'],
+              ),
+            ),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Google Sign-in failed: $e')));
