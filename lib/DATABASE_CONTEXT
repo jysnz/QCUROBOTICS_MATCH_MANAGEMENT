@@ -1,0 +1,10 @@
+create table public.user_accounts (
+  id uuid not null,
+  email text not null,
+  full_name text null,
+  position text null,
+  created_at timestamp with time zone not null default timezone ('utc'::text, now()),
+  constraint user_accounts_pkey primary key (id),
+  constraint user_accounts_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
