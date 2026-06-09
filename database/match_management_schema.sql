@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS public.matches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tournament_id UUID NOT NULL REFERENCES public.tournaments(id) ON DELETE CASCADE,
     match_number INT NOT NULL,
+    match_type TEXT NOT NULL DEFAULT 'Qualification' CHECK (match_type IN ('Qualification', 'Semi-Final', 'Final')),
     red_team_id INT NOT NULL REFERENCES public.teams(id),
     blue_team_id INT NOT NULL REFERENCES public.teams(id),
     red_score INT DEFAULT 0,

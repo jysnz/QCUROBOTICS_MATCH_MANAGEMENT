@@ -2,6 +2,7 @@ class TournamentMatch {
   final String id;
   final String tournamentId;
   final int matchNumber;
+  final String matchType;
   final int redTeamId;
   final int blueTeamId;
   final int redScore;
@@ -16,6 +17,7 @@ class TournamentMatch {
     required this.id,
     required this.tournamentId,
     required this.matchNumber,
+    required this.matchType,
     required this.redTeamId,
     required this.blueTeamId,
     required this.redScore,
@@ -30,6 +32,7 @@ class TournamentMatch {
       id: json['id'],
       tournamentId: json['tournament_id'],
       matchNumber: json['match_number'],
+      matchType: json['match_type'] ?? 'Qualification',
       redTeamId: json['red_team_id'],
       blueTeamId: json['blue_team_id'],
       redScore: json['red_score'] ?? 0,

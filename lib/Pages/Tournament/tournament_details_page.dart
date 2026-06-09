@@ -148,6 +148,10 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   }
 
   Widget _buildScheduleTab(int completed, int total, double progress) {
+    final qualMatches = _matches.where((m) => m.matchType == 'Qualification').toList();
+    final sfMatches = _matches.where((m) => m.matchType == 'Semi-Final').toList();
+    final finalMatches = _matches.where((m) => m.matchType == 'Final').toList();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(kPadding),
       child: Column(
@@ -184,8 +188,34 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
             ),
           ),
           const SizedBox(height: 32),
-          const TechnicalSectionHeader(label: 'Qualification Matches', color: Colors.white, topPadding: 0),
-          if (_matches.isEmpty)
+          
+          if (finalMatches.isNotEmpty) ...[
+            const TechnicalSectionHeader(
+              label: '🏆 THE GRAND FINALS', 
+              color: Color(0xFFFFD700), 
+              topPadding: 0
+            ),
+            const SizedBox(height: 12),
+            ...finalMatches.map((m) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _MatchRow(match: m, onTap: () => _showStartMatchModal(m)),
+            )),
+            const SizedBox(height: 32),
+          ],
+
+          if (sfMatches.isNotEmpty) ...[
+            const TechnicalSectionHeader(label: 'SEMI-FINALS', color: kAccent, topPadding: 0),
+            const SizedBox(height: 12),
+            ...sfMatches.map((m) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _MatchRow(match: m, onTap: () => _showStartMatchModal(m)),
+            )),
+            const SizedBox(height: 24),
+          ],
+
+          const TechnicalSectionHeader(label: 'QUALIFICATION MATCHES', color: Colors.white, topPadding: 0),
+          const SizedBox(height: 12),
+          if (qualMatches.isEmpty)
             Center(child: Padding(
               padding: const EdgeInsets.all(32.0),
               child: Text('No matches generated yet.', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
@@ -194,10 +224,10 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _matches.length,
+              itemCount: qualMatches.length,
               separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
-                final match = _matches[index];
+                final match = qualMatches[index];
                 return _MatchRow(
                   match: match,
                   onTap: () => _showStartMatchModal(match),
