@@ -136,11 +136,14 @@ class TournamentService {
     return matches;
   }
 
-  Future<void> submitMatchScore(String matchId, int redScore, int blueScore) async {
+  Future<void> submitMatchScore(String matchId, int redScore, int blueScore, {bool redAwp = false, bool blueAwp = false, String autonomousBonus = 'None'}) async {
     // 1. Submit the score
     final response = await _client.from('matches').update({
       'red_score': redScore,
       'blue_score': blueScore,
+      'red_awp': redAwp,
+      'blue_awp': blueAwp,
+      'autonomous_bonus': autonomousBonus,
       'status': 'Completed'
     }).eq('id', matchId).select('tournament_id, match_type').single();
 
@@ -261,9 +264,10 @@ class TournamentService {
         .from('rankings')
         .select('*, teams(team_name)')
         .eq('tournament_id', tournamentId)
-        .order('ranking_points', ascending: false)
-        .order('total_points_scored', ascending: false)
-        .order('total_points_conceded', ascending: true);
+        .order('wp', ascending: false)
+        .order('ap', ascending: false)
+        .order('sp', ascending: false)
+        .order('team_id', ascending: true);
     
     return (response as List).map((json) => Ranking.fromJson(json)).toList();
   }

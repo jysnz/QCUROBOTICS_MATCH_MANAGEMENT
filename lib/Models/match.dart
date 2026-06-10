@@ -8,6 +8,9 @@ class TournamentMatch {
   final int redScore;
   final int blueScore;
   final String status;
+  final bool redAwp;
+  final bool blueAwp;
+  final String autonomousBonus;
 
   // Optional relations
   String? redTeamName;
@@ -23,6 +26,9 @@ class TournamentMatch {
     required this.redScore,
     required this.blueScore,
     required this.status,
+    this.redAwp = false,
+    this.blueAwp = false,
+    this.autonomousBonus = 'None',
     this.redTeamName,
     this.blueTeamName,
   });
@@ -38,6 +44,9 @@ class TournamentMatch {
       redScore: json['red_score'] ?? 0,
       blueScore: json['blue_score'] ?? 0,
       status: json['status'],
+      redAwp: json['red_awp'] ?? false,
+      blueAwp: json['blue_awp'] ?? false,
+      autonomousBonus: json['autonomous_bonus'] ?? 'None',
       redTeamName: json['red_team']?['team_name'],
       blueTeamName: json['blue_team']?['team_name'],
     );

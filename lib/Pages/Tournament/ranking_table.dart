@@ -89,11 +89,11 @@ class _RankingTableState extends State<RankingTable> {
           columns: const [
             DataColumn(label: Text('RANK')),
             DataColumn(label: Text('TEAM')),
+            DataColumn(label: Text('WP')),
+            DataColumn(label: Text('AP')),
+            DataColumn(label: Text('SP')),
             DataColumn(label: Text('W-L-T')),
-            DataColumn(label: Text('MATCHES')),
-            DataColumn(label: Text('PTS+')),
-            DataColumn(label: Text('PTS-')),
-            DataColumn(label: Text('RP')),
+            DataColumn(label: Text('PLAYED')),
           ],
           rows: List.generate(_rankings.length, (index) {
             final r = _rankings[index];
@@ -112,17 +112,17 @@ class _RankingTableState extends State<RankingTable> {
                   Text(
                     '#$rank',
                     style: TextStyle(
-                      fontWeight: isTop3 ? FontWeight.w900 : FontWeight.bold,
-                      color: isTop3 ? Colors.white : Colors.white70,
+                      fontWeight: FontWeight.w900,
+                      color: isTop3 ? kAccent : Colors.white70,
                     )
                   )
                 ),
-                DataCell(Text(r.teamName ?? 'Unknown')),
-                DataCell(Text('${r.wins}-${r.losses}-${r.ties}')),
-                DataCell(Text('${r.matchesPlayed}')),
-                DataCell(Text('${r.totalPointsScored}', style: const TextStyle(color: kAccent))),
-                DataCell(Text('${r.totalPointsConceded}', style: const TextStyle(color: Colors.redAccent))),
-                DataCell(Text('${r.rankingPoints}', style: const TextStyle(fontWeight: FontWeight.w900))),
+                DataCell(Text(r.teamName ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text('${r.wp.toStringAsFixed(0)}', style: const TextStyle(color: kAccent, fontWeight: FontWeight.bold))),
+                DataCell(Text('${r.ap.toStringAsFixed(1)}')),
+                DataCell(Text('${r.sp.toStringAsFixed(1)}')),
+                DataCell(Text('${r.wins}-${r.losses}-${r.ties}', style: const TextStyle(color: Colors.white54))),
+                DataCell(Text('${r.matchesPlayed}', style: const TextStyle(color: Colors.white54))),
               ],
             );
           }),

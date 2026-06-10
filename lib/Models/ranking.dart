@@ -8,6 +8,9 @@ class Ranking {
   final int totalPointsScored;
   final int totalPointsConceded;
   final int rankingPoints;
+  final double wp;
+  final double ap;
+  final double sp;
 
   // Optional relations
   String? teamName;
@@ -22,6 +25,9 @@ class Ranking {
     required this.totalPointsScored,
     required this.totalPointsConceded,
     required this.rankingPoints,
+    required this.wp,
+    required this.ap,
+    required this.sp,
     this.teamName,
   });
 
@@ -36,6 +42,9 @@ class Ranking {
       totalPointsScored: json['total_points_scored'] ?? 0,
       totalPointsConceded: json['total_points_conceded'] ?? 0,
       rankingPoints: json['ranking_points'] ?? 0,
+      wp: (json['wp'] ?? 0).toDouble(),
+      ap: (json['ap'] ?? 0).toDouble(),
+      sp: (json['sp'] ?? 0).toDouble(),
       teamName: json['teams']?['team_name'],
     );
   }
