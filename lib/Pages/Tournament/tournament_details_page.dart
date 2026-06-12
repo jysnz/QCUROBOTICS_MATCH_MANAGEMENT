@@ -24,7 +24,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   bool _isLoading = true;
   RealtimeChannel? _subscription;
 
-  @override
   void initState() {
     super.initState();
     _loadData();
