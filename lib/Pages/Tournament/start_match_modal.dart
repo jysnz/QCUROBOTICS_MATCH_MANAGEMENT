@@ -32,8 +32,14 @@ class _StartMatchModalState extends State<StartMatchModal> {
   int _longGoal1Blue = 0;
   int _longGoal2Red = 0;
   int _longGoal2Blue = 0;
-  int _midGoalRed = 0;
-  int _midGoalBlue = 0;
+  
+  // Middle Goal - Two counters per side
+  int _midGoal1Red = 0;
+  int _midGoal2Red = 0;
+  int _midGoal1Blue = 0;
+  int _midGoal2Blue = 0;
+
+  // Parking
   int _parkRed = 0;
   int _parkBlue = 0;
 
@@ -98,9 +104,9 @@ class _StartMatchModalState extends State<StartMatchModal> {
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        top: 24,
-        left: 24,
-        right: 24,
+        top: 20,
+        left: 16,
+        right: 16,
       ),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -108,26 +114,28 @@ class _StartMatchModalState extends State<StartMatchModal> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _buildHandle(),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'MATCH #${widget.matchData.matchNumber}',
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.0),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(letterSpacing: 1.0, fontSize: 18),
                 ),
                 if (widget.matchData.status == 'Completed')
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: kMuted.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: kMuted.withValues(alpha: 0.5)),
+                      color: kMuted.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: kMuted.withValues(alpha: 0.2)),
                     ),
-                    child: const Text('COMPLETED', style: TextStyle(color: kMuted, fontSize: 10, fontWeight: FontWeight.w800)),
+                    child: Text('COMPLETED', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: kMuted, fontSize: 8)),
                   )
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -152,8 +160,8 @@ class _StartMatchModalState extends State<StartMatchModal> {
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('VS', style: TextStyle(color: Colors.white54, fontWeight: FontWeight.w900, fontSize: 16)),
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('VS', style: TextStyle(color: Colors.white12, fontWeight: FontWeight.w900, fontSize: 18, fontStyle: FontStyle.italic)),
                 ),
                 Expanded(
                   child: Column(
@@ -196,7 +204,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                 _BonusButton(
                   label: 'NONE',
                   isSelected: _autonomousBonus == 'None',
-                  color: Colors.white24,
+                  color: Colors.white10,
                   onTap: widget.matchData.status != 'Completed' 
                     ? () => setState(() => _autonomousBonus = 'None') 
                     : null,
@@ -214,44 +222,145 @@ class _StartMatchModalState extends State<StartMatchModal> {
             ),
             const SizedBox(height: 32),
             const TechnicalSectionHeader(label: 'MATCH BREAKDOWN', color: Colors.white24, topPadding: 0),
-            const SizedBox(height: 12),
             TechnicalCard(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
-                  _BreakdownRow(
-                    imagePath: 'Images/long_goal.png',
-                    redValue: _longGoal1Red,
-                    blueValue: _longGoal1Blue,
-                    onRedChanged: (v) => setState(() => _longGoal1Red = v),
-                    onBlueChanged: (v) => setState(() => _longGoal1Blue = v),
-                    enabled: widget.matchData.status != 'Completed',
+                  // Long Goal 1 - Using heightFactor for "negative padding"
+                  Align(
+                    heightFactor: 0.65,
+                    child: _BreakdownRow(
+                      image: const BreakdownImage(path: 'Images/long_goal.png', height: 160),
+                      leftContent: _BreakdownCounter(
+                        label: 'GOAL 1',
+                        value: _longGoal1Red,
+                        onChanged: (v) => setState(() => _longGoal1Red = v),
+                        color: Colors.redAccent,
+                        enabled: widget.matchData.status != 'Completed',
+                      ),
+                      rightContent: _BreakdownCounter(
+                        label: 'GOAL 1',
+                        value: _longGoal1Blue,
+                        onChanged: (v) => setState(() => _longGoal1Blue = v),
+                        color: Colors.blueAccent,
+                        enabled: widget.matchData.status != 'Completed',
+                      ),
+                    ),
                   ),
-                  Divider(color: Colors.white.withValues(alpha: 0.05), height: 24),
-                  _BreakdownRow(
-                    imagePath: 'Images/long_goal.png',
-                    redValue: _longGoal2Red,
-                    blueValue: _longGoal2Blue,
-                    onRedChanged: (v) => setState(() => _longGoal2Red = v),
-                    onBlueChanged: (v) => setState(() => _longGoal2Blue = v),
-                    enabled: widget.matchData.status != 'Completed',
+                  
+                  // Long Goal 2
+                  Align(
+                    heightFactor: 0.65,
+                    child: _BreakdownRow(
+                      image: const BreakdownImage(path: 'Images/long_goal.png', height: 160),
+                      leftContent: _BreakdownCounter(
+                        label: 'GOAL 2',
+                        value: _longGoal2Red,
+                        onChanged: (v) => setState(() => _longGoal2Red = v),
+                        color: Colors.redAccent,
+                        enabled: widget.matchData.status != 'Completed',
+                      ),
+                      rightContent: _BreakdownCounter(
+                        label: 'GOAL 2',
+                        value: _longGoal2Blue,
+                        onChanged: (v) => setState(() => _longGoal2Blue = v),
+                        color: Colors.blueAccent,
+                        enabled: widget.matchData.status != 'Completed',
+                      ),
+                    ),
                   ),
-                  Divider(color: Colors.white.withValues(alpha: 0.05), height: 24),
-                  _BreakdownRow(
-                    imagePath: 'Images/middle_goal.png',
-                    redValue: _midGoalRed,
-                    blueValue: _midGoalBlue,
-                    onRedChanged: (v) => setState(() => _midGoalRed = v),
-                    onBlueChanged: (v) => setState(() => _midGoalBlue = v),
-                    enabled: widget.matchData.status != 'Completed',
+                  
+                  // Middle Goal
+                  Align(
+                    heightFactor: 0.65,
+                    child: _BreakdownRow(
+                      image: const BreakdownImage(path: 'Images/middle_goal.png', height: 280),
+                      leftContent: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _BreakdownCounter(
+                            label: 'LVL 1',
+                            value: _midGoal1Red,
+                            onChanged: (v) => setState(() => _midGoal1Red = v),
+                            color: Colors.redAccent,
+                            enabled: widget.matchData.status != 'Completed',
+                          ),
+                          const SizedBox(height: 4),
+                          _BreakdownCounter(
+                            label: 'LVL 2',
+                            value: _midGoal2Red,
+                            onChanged: (v) => setState(() => _midGoal2Red = v),
+                            color: Colors.redAccent,
+                            enabled: widget.matchData.status != 'Completed',
+                          ),
+                        ],
+                      ),
+                      rightContent: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _BreakdownCounter(
+                            label: 'LVL 1',
+                            value: _midGoal1Blue,
+                            onChanged: (v) => setState(() => _midGoal1Blue = v),
+                            color: Colors.blueAccent,
+                            enabled: widget.matchData.status != 'Completed',
+                          ),
+                          const SizedBox(height: 4),
+                          _BreakdownCounter(
+                            label: 'LVL 2',
+                            value: _midGoal2Blue,
+                            onChanged: (v) => setState(() => _midGoal2Blue = v),
+                            color: Colors.blueAccent,
+                            enabled: widget.matchData.status != 'Completed',
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  Divider(color: Colors.white.withValues(alpha: 0.05), height: 24),
-                  _ParkingRow(
-                    redValue: _parkRed,
-                    blueValue: _parkBlue,
-                    onRedChanged: (v) => setState(() => _parkRed = v),
-                    onBlueChanged: (v) => setState(() => _parkBlue = v),
-                    enabled: widget.matchData.status != 'Completed',
+                  
+                  // Parking Zone Protocol - Compact Column
+                  Transform.translate(
+                    offset: const Offset(0, -20),
+                    child: Column(
+                      children: [
+                        const Row(
+                          children: [
+                            Expanded(child: BreakdownImage(path: 'Images/parking_red.png', height: 100)),
+                            SizedBox(width: 16),
+                            Expanded(child: BreakdownImage(path: 'Images/parking_blue.png', height: 100)),
+                          ],
+                        ),
+                        const SizedBox(height: 0),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Center(
+                                child: _BreakdownCounter(
+                                  label: 'PARK',
+                                  value: _parkRed,
+                                  onChanged: (v) => setState(() => _parkRed = v),
+                                  color: Colors.redAccent,
+                                  enabled: widget.matchData.status != 'Completed',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Center(
+                                child: _BreakdownCounter(
+                                  label: 'PARK',
+                                  value: _parkBlue,
+                                  onChanged: (v) => setState(() => _parkBlue = v),
+                                  color: Colors.blueAccent,
+                                  enabled: widget.matchData.status != 'Completed',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -262,17 +371,52 @@ class _StartMatchModalState extends State<StartMatchModal> {
                 label: 'Submit Score',
                 isLoading: _isSubmitting,
                 onTap: _submitScore,
+                icon: Icons.check_circle_outline,
               )
             else
               TechnicalButton(
                 label: 'Close',
                 color: kMuted,
                 onTap: () => Navigator.pop(context),
+                icon: Icons.close_rounded,
               ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHandle() {
+    return Center(
+      child: Container(
+        width: 40,
+        height: 4,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+}
+
+class BreakdownImage extends StatelessWidget {
+  final String path;
+  final double height;
+
+  const BreakdownImage({
+    super.key,
+    required this.path,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      path,
+      height: height,
+      fit: BoxFit.contain,
     );
   }
 }
@@ -300,25 +444,31 @@ class _AwpCheckbox extends StatelessWidget {
         decoration: BoxDecoration(
           color: value ? color.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: value ? color.withValues(alpha: 0.3) : Colors.white10),
+          border: Border.all(color: value ? color.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              height: 18,
-              width: 18,
+              height: 16,
+              width: 16,
               child: Checkbox(
                 value: value,
                 onChanged: onChanged,
                 activeColor: color,
                 checkColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                side: const BorderSide(color: Colors.white24, width: 1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1.0),
               ),
             ),
             const SizedBox(width: 6),
-            Text(label, style: TextStyle(color: value ? Colors.white : Colors.white54, fontSize: 10, fontWeight: FontWeight.bold)),
+            Text(
+              label.toUpperCase(), 
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: value ? Colors.white : kForegroundMuted,
+                fontSize: 8,
+              )
+            ),
           ],
         ),
       ),
@@ -345,21 +495,20 @@ class _BonusButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.2) : kSurface,
+            color: isSelected ? color.withValues(alpha: 0.15) : kSurface.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: isSelected ? color : Colors.white10),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.white38,
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-              letterSpacing: 1.0,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: isSelected ? color : kForegroundMuted,
+              fontSize: 10,
             ),
           ),
         ),
@@ -384,37 +533,38 @@ class _ScoreInputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TechnicalCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4),
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
             ),
             child: Text(
-              teamName,
-              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+              teamName.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontSize: 8),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextField(
             controller: controller,
             enabled: enabled,
             keyboardType: TextInputType.number,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
+            style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 32),
             decoration: InputDecoration(
-              hintText: '0',
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2)),
+              hintText: '00',
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.05)),
               filled: true,
-              fillColor: kBackground.withValues(alpha: 0.5),
+              fillColor: kBackground.withValues(alpha: 0.3),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(kRadius), borderSide: BorderSide.none),
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
             ),
           ),
         ],
@@ -424,113 +574,42 @@ class _ScoreInputCard extends StatelessWidget {
 }
 
 class _BreakdownRow extends StatelessWidget {
-  final String imagePath;
-  final int redValue;
-  final int blueValue;
-  final ValueChanged<int> onRedChanged;
-  final ValueChanged<int> onBlueChanged;
-  final bool enabled;
+  final Widget image;
+  final Widget leftContent;
+  final Widget rightContent;
 
   const _BreakdownRow({
-    required this.imagePath,
-    required this.redValue,
-    required this.blueValue,
-    required this.onRedChanged,
-    required this.onBlueChanged,
-    required this.enabled,
+    required this.image,
+    required this.leftContent,
+    required this.rightContent,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _BreakdownCounter(
-          value: redValue,
-          onChanged: onRedChanged,
-          color: Colors.redAccent,
-          enabled: enabled,
-        ),
+        leftContent,
+        const SizedBox(width: 8),
         Expanded(
-          child: Center(
-            child: Image.asset(imagePath, height: 40, fit: BoxFit.contain),
-          ),
+          child: image,
         ),
-        _BreakdownCounter(
-          value: blueValue,
-          onChanged: onBlueChanged,
-          color: Colors.blueAccent,
-          enabled: enabled,
-        ),
-      ],
-    );
-  }
-}
-
-class _ParkingRow extends StatelessWidget {
-  final int redValue;
-  final int blueValue;
-  final ValueChanged<int> onRedChanged;
-  final ValueChanged<int> onBlueChanged;
-  final bool enabled;
-
-  const _ParkingRow({
-    required this.redValue,
-    required this.blueValue,
-    required this.onRedChanged,
-    required this.onBlueChanged,
-    required this.enabled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              Image.asset('Images/parking_red.png', height: 40, fit: BoxFit.contain),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _BreakdownCounter(
-                  value: redValue,
-                  onChanged: onRedChanged,
-                  color: Colors.redAccent,
-                  enabled: enabled,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 24),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Expanded(
-                child: _BreakdownCounter(
-                  value: blueValue,
-                  onChanged: onBlueChanged,
-                  color: Colors.blueAccent,
-                  enabled: enabled,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Image.asset('Images/parking_blue.png', height: 40, fit: BoxFit.contain),
-            ],
-          ),
-        ),
+        const SizedBox(width: 8),
+        rightContent,
       ],
     );
   }
 }
 
 class _BreakdownCounter extends StatelessWidget {
+  final String label;
   final int value;
   final ValueChanged<int> onChanged;
   final Color color;
   final bool enabled;
 
   const _BreakdownCounter({
+    required this.label,
     required this.value,
     required this.onChanged,
     required this.color,
@@ -539,37 +618,60 @@ class _BreakdownCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: kBackground.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _CounterBtn(
-            icon: Icons.remove,
-            onTap: enabled && value > 0 ? () => onChanged(value - 1) : null,
-          ),
-          Container(
-            width: 32,
-            alignment: Alignment.center,
-            child: Text(
-              '$value',
-              style: TextStyle(
-                color: value > 0 ? color : Colors.white24,
-                fontWeight: FontWeight.w900,
-                fontSize: 14,
-              ),
+    final bool isActive = value > 0;
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label, 
+          style: TextStyle(
+            color: isActive ? color.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.1),
+            fontSize: 7,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.5,
+          )
+        ),
+        const SizedBox(height: 4),
+        Container(
+          decoration: BoxDecoration(
+            color: isActive ? color.withValues(alpha: 0.05) : kBackground.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isActive ? color.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05),
             ),
+            boxShadow: isActive ? [
+              BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: -2)
+            ] : null,
           ),
-          _CounterBtn(
-            icon: Icons.add,
-            onTap: enabled ? () => onChanged(value + 1) : null,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _CounterBtn(
+                icon: Icons.remove_rounded,
+                onTap: enabled && value > 0 ? () => onChanged(value - 1) : null,
+              ),
+              Container(
+                width: 28,
+                alignment: Alignment.center,
+                child: Text(
+                  '$value',
+                  style: TextStyle(
+                    color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.1),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              _CounterBtn(
+                icon: Icons.add_rounded,
+                onTap: enabled ? () => onChanged(value + 1) : null,
+                color: color,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -577,8 +679,9 @@ class _BreakdownCounter extends StatelessWidget {
 class _CounterBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
+  final Color? color;
 
-  const _CounterBtn({required this.icon, this.onTap});
+  const _CounterBtn({required this.icon, this.onTap, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -586,8 +689,14 @@ class _CounterBtn extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(icon, size: 16, color: onTap == null ? Colors.white10 : Colors.white54),
+        padding: const EdgeInsets.all(6.0),
+        child: Icon(
+          icon, 
+          size: 16, 
+          color: onTap == null 
+            ? Colors.white.withValues(alpha: 0.03) 
+            : (color?.withValues(alpha: 0.8) ?? Colors.white38)
+        ),
       ),
     );
   }

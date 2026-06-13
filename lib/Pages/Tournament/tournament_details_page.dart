@@ -328,7 +328,6 @@ class MatchCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(kRadius),
           child: TechnicalCard(
-            padding: EdgeInsets.all(isHighlighted ? 20 : 16),
             child: Column(
               children: [
                 _buildHeader(context, isLive, isCompleted),

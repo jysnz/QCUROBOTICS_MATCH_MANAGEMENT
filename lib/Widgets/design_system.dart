@@ -231,24 +231,29 @@ class TechnicalSectionHeader extends StatelessWidget {
 
 class TechnicalCard extends StatelessWidget {
   final Widget child;
-  final EdgeInsetsGeometry padding;
   final bool showBorder;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? margin;
 
   const TechnicalCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(16),
     this.showBorder = true,
+    this.padding = const EdgeInsets.all(kPadding),
+    this.margin,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: margin,
       padding: padding,
       decoration: BoxDecoration(
         color: kSurface.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(kRadius),
-        border: showBorder ? Border.all(color: Colors.white.withValues(alpha: 0.05)) : null,
+        border: showBorder
+            ? Border.all(color: Colors.white.withValues(alpha: 0.05))
+            : null,
       ),
       child: child,
     );
