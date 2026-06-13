@@ -56,26 +56,23 @@ class AuthTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       enabled: enabled,
-      style: TextStyle(
-        color: enabled ? Colors.white : Colors.white54,
-        fontSize: 14,
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        color: enabled ? kForeground : kForegroundMuted,
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         labelText: label.toUpperCase(),
-        labelStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.3),
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
+        labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: kForegroundMuted,
           letterSpacing: 1.0,
         ),
         prefixIcon: Icon(icon, color: kAccent.withValues(alpha: 0.7), size: 20),
         filled: true,
-        fillColor: kBackground.withValues(alpha: 0.3),
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        fillColor: kBackground.withValues(alpha: 0.5),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(kRadius),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(kRadius),
@@ -83,7 +80,7 @@ class AuthTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(kRadius),
-          borderSide: const BorderSide(color: kAccent, width: 1.0),
+          borderSide: const BorderSide(color: kAccent, width: 1.5),
         ),
       ),
     );

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../Widgets/design_system.dart';
 import '../../Services/tournament_service.dart';
 import '../../Models/match.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StartMatchModal extends StatefulWidget {
   final TournamentMatch matchData;

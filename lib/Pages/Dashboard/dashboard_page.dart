@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../Widgets/design_system.dart';
 import '../../Widgets/loading_ui.dart';
 import '../../Services/tournament_service.dart';
@@ -149,11 +148,16 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               Text(
                 '$greeting,',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
               ),
               Text(
                 fullName.toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -225,24 +229,20 @@ class _DashboardPageState extends State<DashboardPage> {
                                 ),
                               ),
                               const SizedBox(height: 24),
-                              const Text(
+                              Text(
                                 'NO TOURNAMENTS FOUND',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
+                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                   letterSpacing: 2,
+                                  color: Colors.white70,
                                 ),
                               ),
                               const SizedBox(height: 12),
                               Text(
                                 'Your competitive arena is empty. Start your first tournament to begin tracking match statistics and team rankings.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: kForegroundMuted,
                                   height: 1.5,
                                 ),
                               ),
@@ -298,56 +298,88 @@ class _TournamentCard extends StatelessWidget {
     final statusColor = isCompleted ? kMuted : kAccent;
 
     return TechnicalCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(kPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
-                  tournament.name,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                  maxLines: 1,
+                  tournament.name.toUpperCase(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                 ),
                 child: Text(
                   tournament.status.toUpperCase(),
-                  style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w800),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: statusColor,
+                    fontSize: 9,
+                  ),
                 ),
               )
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Icons.calendar_today, size: 14, color: Colors.white.withValues(alpha: 0.5)),
-              const SizedBox(width: 6),
-              Text(
-                tournament.tournamentDate.toString().split(' ')[0],
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
+              _InfoItem(
+                icon: Icons.calendar_today_rounded,
+                label: tournament.tournamentDate.toString().split(' ')[0],
               ),
-              const Spacer(),
+              const SizedBox(width: 24),
               _TeamCountBadge(tournamentId: tournament.id),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           TechnicalButton(
-            label: 'View Details',
-            color: Colors.white,
+            label: 'Open Dashboard',
+            color: kAccent,
             onTap: onTap,
+            icon: Icons.dashboard_customize_outlined,
           ),
         ],
       ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _InfoItem({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: kForegroundMuted),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: kForeground.withValues(alpha: 0.6),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -380,15 +412,9 @@ class _TeamCountBadgeState extends State<_TeamCountBadge> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.group, size: 14, color: Colors.white.withValues(alpha: 0.5)),
-        const SizedBox(width: 6),
-        Text(
-          '$_count Teams',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
-        ),
-      ],
+    return _InfoItem(
+      icon: Icons.groups_rounded,
+      label: '$_count Teams',
     );
   }
 }

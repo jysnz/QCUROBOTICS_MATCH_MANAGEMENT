@@ -33,6 +33,14 @@ class TournamentMatch {
     this.blueTeamName,
   });
 
+  bool get isCompleted => status == 'Completed';
+  bool get isPending => status == 'Pending' || status == 'Scheduled';
+  bool get isOngoing => status == 'Ongoing' || status == 'Live';
+
+  bool get redWins => isCompleted && redScore > blueScore;
+  bool get blueWins => isCompleted && blueScore > redScore;
+  bool get isTie => isCompleted && redScore == blueScore;
+
   factory TournamentMatch.fromJson(Map<String, dynamic> json) {
     return TournamentMatch(
       id: json['id'],

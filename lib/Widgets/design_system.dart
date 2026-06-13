@@ -8,8 +8,107 @@ const Color kSurface = Color(0xFF1E293B);
 const Color kAccent = Color(0xFF22C55E);
 const Color kMuted = Color(0xFF334155);
 const Color kForeground = Color(0xFFF8FAFC);
+const Color kForegroundMuted = Color(0xFF94A3B8);
 const double kRadius = 12.0;
 const double kPadding = 20.0;
+
+// ── Typography ───────────────────────────────────────────────────────────────
+
+class AppTypography {
+  static const TextTheme textTheme = TextTheme(
+    displayLarge: TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.w900,
+      color: kForeground,
+      letterSpacing: -0.5,
+      height: 1.2,
+    ),
+    headlineMedium: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w800,
+      color: kForeground,
+      letterSpacing: 0.5,
+      height: 1.3,
+    ),
+    titleLarge: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: kForeground,
+      letterSpacing: 0.1,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      color: kForeground,
+      letterSpacing: 0.1,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      color: kForeground,
+      height: 1.6,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      color: kForeground,
+      height: 1.5,
+    ),
+    bodySmall: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      color: kForegroundMuted,
+      height: 1.4,
+    ),
+    labelLarge: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w800,
+      color: kForeground,
+      letterSpacing: 1.0,
+    ),
+    labelSmall: TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w900,
+      color: kForegroundMuted,
+      letterSpacing: 1.5,
+    ),
+  );
+}
+
+// ── Theme ────────────────────────────────────────────────────────────────────
+
+class AppTheme {
+  static ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: kAccent,
+      brightness: Brightness.dark,
+      surface: kBackground,
+    ),
+    scaffoldBackgroundColor: kBackground,
+    textTheme: AppTypography.textTheme,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: kSurface,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w900,
+        color: kForeground,
+        letterSpacing: 1.0,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: kSurface.withValues(alpha: 0.4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kRadius),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      elevation: 0,
+    ),
+  );
+}
 
 // ── Shared UI Components ─────────────────────────────────────────────────────
 

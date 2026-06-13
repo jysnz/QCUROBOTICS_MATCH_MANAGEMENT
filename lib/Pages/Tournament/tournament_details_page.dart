@@ -24,6 +24,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   bool _isLoading = true;
   RealtimeChannel? _subscription;
 
+  @override
   void initState() {
     super.initState();
     _loadData();
@@ -76,6 +77,25 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   Future<void> _loadMatches() async {
     final matches = await _service.getTournamentMatches(widget.tournamentId);
     if (mounted) {
+      // Sort matches:
+      // 1. Live/Ongoing matches first
+      // 2. Pending/Scheduled matches by match number
+      // 3. Completed matches last by match number
+      matches.sort((a, b) {
+        if (a.status == b.status) {
+          return a.matchNumber.compareTo(b.matchNumber);
+        }
+        
+        // Custom priority
+        int priority(String status) {
+          if (status == 'Ongoing' || status == 'Live') return 0;
+          if (status == 'Pending' || status == 'Scheduled') return 1;
+          return 2;
+        }
+        
+        return priority(a.status).compareTo(priority(b.status));
+      });
+
       setState(() {
         _matches = matches;
       });
@@ -89,7 +109,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => StartMatchModal(
         matchData: match,
-        onMatchSubmitted: _loadData,
+        onMatchSubmitted: _loadMatches, // Updated to refresh matches
       ),
     );
   }
@@ -113,7 +133,9 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
         backgroundColor: kBackground,
         appBar: AppBar(
           backgroundColor: kSurface,
-          title: Text(_tournament!.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+          elevation: 0,
+          title: Text(_tournament!.name.toUpperCase(), 
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white, letterSpacing: 1.0)),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 20),
             onPressed: () => Navigator.pop(context),
@@ -121,9 +143,10 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
           bottom: const TabBar(
             indicatorColor: kAccent,
             labelColor: kAccent,
-            unselectedLabelColor: Colors.white54,
+            unselectedLabelColor: Colors.white38,
+            labelStyle: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1.0),
             tabs: [
-              Tab(text: 'SCHEDULE & INFO'),
+              Tab(text: 'MATCH SCHEDULE'),
               Tab(text: 'LIVE RANKINGS'),
             ],
           ),
@@ -147,170 +170,369 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   }
 
   Widget _buildScheduleTab(int completed, int total, double progress) {
-    final qualMatches = _matches.where((m) => m.matchType == 'Qualification').toList();
-    final sfMatches = _matches.where((m) => m.matchType == 'Semi-Final').toList();
-    final finalMatches = _matches.where((m) => m.matchType == 'Final').toList();
+    final upcomingMatches = _matches.where((m) => !m.isCompleted).toList();
+    final completedMatchesList = _matches.where((m) => m.isCompleted).toList();
+    
+    TournamentMatch? nextMatch;
+    if (upcomingMatches.isNotEmpty) {
+      nextMatch = upcomingMatches.first;
+    }
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(kPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TechnicalCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Status: ${_tournament!.status}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    Text('Teams: $_teamCount', style: const TextStyle(color: Colors.white70)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Progress: ${(progress * 100).toInt()}%', style: const TextStyle(color: kAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-                    Text('$completed / $total Matches', style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: Colors.white.withValues(alpha: 0.1),
-                  color: kAccent,
-                  minHeight: 6,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            ),
-          ),
+          _buildTournamentStats(completed, total, progress),
           const SizedBox(height: 32),
           
-          if (finalMatches.isNotEmpty) ...[
+          if (nextMatch != null) ...[
             const TechnicalSectionHeader(
-              label: '🏆 THE GRAND FINALS', 
-              color: Color(0xFFFFD700), 
+              label: 'CURRENT / NEXT MATCH', 
+              color: kAccent, 
               topPadding: 0
             ),
             const SizedBox(height: 12),
-            ...finalMatches.map((m) => Padding(
+            MatchCard(
+              match: nextMatch, 
+              isHighlighted: true,
+              onTap: () => _showStartMatchModal(nextMatch!),
+            ),
+            const SizedBox(height: 32),
+          ],
+
+          if (upcomingMatches.length > 1) ...[
+            const TechnicalSectionHeader(label: 'UPCOMING QUEUE', color: Colors.white38, topPadding: 0),
+            const SizedBox(height: 12),
+            ...upcomingMatches.skip(1).map((m) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _MatchRow(match: m, onTap: () => _showStartMatchModal(m)),
+              child: MatchCard(match: m, onTap: () => _showStartMatchModal(m)),
             )),
             const SizedBox(height: 32),
           ],
 
-          if (sfMatches.isNotEmpty) ...[
-            const TechnicalSectionHeader(label: 'SEMI-FINALS', color: kAccent, topPadding: 0),
+          if (completedMatchesList.isNotEmpty) ...[
+            const TechnicalSectionHeader(label: 'COMPLETED MATCHES', color: kMuted, topPadding: 0),
             const SizedBox(height: 12),
-            ...sfMatches.map((m) => Padding(
+            ...completedMatchesList.reversed.map((m) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _MatchRow(match: m, onTap: () => _showStartMatchModal(m)),
+              child: MatchCard(match: m, onTap: () => _showStartMatchModal(m)),
             )),
-            const SizedBox(height: 24),
           ],
 
-          const TechnicalSectionHeader(label: 'QUALIFICATION MATCHES', color: Colors.white, topPadding: 0),
-          const SizedBox(height: 12),
-          if (qualMatches.isEmpty)
+          if (_matches.isEmpty)
             Center(child: Padding(
               padding: const EdgeInsets.all(32.0),
               child: Text('No matches generated yet.', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
-            ))
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: qualMatches.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final match = qualMatches[index];
-                return _MatchRow(
-                  match: match,
-                  onTap: () => _showStartMatchModal(match),
-                );
-              },
-            ),
+            )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTournamentStats(int completed, int total, double progress) {
+    return TechnicalCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('TOURNAMENT STATUS', style: Theme.of(context).textTheme.labelSmall),
+                  const SizedBox(height: 6),
+                  Text(_tournament!.status.toUpperCase(), 
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('TEAMS', style: Theme.of(context).textTheme.labelSmall),
+                  const SizedBox(height: 6),
+                  Text('$_teamCount', 
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('${(progress * 100).toInt()}% COMPLETE', 
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: kAccent, fontWeight: FontWeight.w900)),
+              Text('$completed / $total MATCHES', 
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Stack(
+            children: [
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                height: 6,
+                width: MediaQuery.of(context).size.width * progress,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [kAccent.withValues(alpha: 0.5), kAccent],
+                  ),
+                  borderRadius: BorderRadius.circular(3),
+                  boxShadow: [
+                    BoxShadow(color: kAccent.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _MatchRow extends StatelessWidget {
+class MatchCard extends StatelessWidget {
   final TournamentMatch match;
   final VoidCallback onTap;
+  final bool isHighlighted;
 
-  const _MatchRow({required this.match, required this.onTap});
+  const MatchCard({
+    super.key, 
+    required this.match, 
+    required this.onTap,
+    this.isHighlighted = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = match.status == 'Completed';
-    final redWins = isCompleted && match.redScore > match.blueScore;
-    final blueWins = isCompleted && match.blueScore > match.redScore;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(kRadius),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: kSurface.withValues(alpha: 0.5),
+    final bool isLive = match.status == 'Ongoing' || match.status == 'Live';
+    final bool isCompleted = match.status == 'Completed';
+    
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: EdgeInsets.only(bottom: isHighlighted ? 0 : 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(kRadius),
-          border: Border.all(color: isCompleted ? Colors.white.withValues(alpha: 0.1) : kAccent.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 40,
-              child: Text('#${match.matchNumber}', style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold, fontSize: 12)),
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          match.redTeamName ?? 'Red',
-                          style: TextStyle(color: Colors.redAccent, fontWeight: redWins ? FontWeight.w900 : FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isCompleted)
-                        Text('${match.redScore}', style: TextStyle(color: Colors.white, fontWeight: redWins ? FontWeight.w900 : FontWeight.w500)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          match.blueTeamName ?? 'Blue',
-                          style: TextStyle(color: Colors.blueAccent, fontWeight: blueWins ? FontWeight.w900 : FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isCompleted)
-                        Text('${match.blueScore}', style: TextStyle(color: Colors.white, fontWeight: blueWins ? FontWeight.w900 : FontWeight.w500)),
-                    ],
+          child: TechnicalCard(
+            padding: EdgeInsets.all(isHighlighted ? 20 : 16),
+            child: Column(
+              children: [
+                _buildHeader(context, isLive, isCompleted),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: _TeamInfo(
+                      name: match.redTeamName ?? 'RED', 
+                      color: Colors.redAccent, 
+                      score: isCompleted ? match.redScore : null,
+                      isWinner: match.redWins,
+                      isLarge: isHighlighted,
+                      isLeft: true,
+                    )),
+                    _buildVS(context, isCompleted),
+                    Expanded(child: _TeamInfo(
+                      name: match.blueTeamName ?? 'BLUE', 
+                      color: Colors.blueAccent, 
+                      score: isCompleted ? match.blueScore : null,
+                      isWinner: match.blueWins,
+                      isLarge: isHighlighted,
+                      isLeft: false,
+                    )),
+                  ],
+                ),
+                if (isHighlighted && !isCompleted) ...[
+                  const SizedBox(height: 20),
+                  TechnicalButton(
+                    label: isLive ? 'UPDATE SCORE' : 'START MATCH', 
+                    onTap: onTap,
+                    color: isLive ? Colors.orangeAccent : kAccent,
+                    icon: isLive ? Icons.edit_note : Icons.play_arrow_rounded,
                   ),
                 ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, bool isLive, bool isCompleted) {
+    Color statusColor = Colors.white24;
+    String statusText = 'UPCOMING';
+    IconData statusIcon = Icons.schedule;
+
+    if (isLive) {
+      statusColor = Colors.orangeAccent;
+      statusText = 'LIVE';
+      statusIcon = Icons.sensors;
+    } else if (isCompleted) {
+      statusColor = kMuted;
+      statusText = 'COMPLETED';
+      statusIcon = Icons.check_circle_outline;
+    } else if (isHighlighted) {
+      statusColor = kAccent;
+      statusText = 'NEXT MATCH';
+      statusIcon = Icons.bolt;
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  if (isLive) 
+                    _PulseIndicator(color: statusColor)
+                  else
+                    Icon(statusIcon, color: statusColor, size: 10),
+                  const SizedBox(width: 6),
+                  Text(
+                    statusText,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: statusColor,
+                      fontSize: 9,
+                    ),
+                  ),
+                ],  
               ),
             ),
-            const SizedBox(width: 16),
-            Icon(
-              isCompleted ? Icons.check_circle_outline : Icons.play_circle_outline,
-              color: isCompleted ? kMuted : kAccent,
-            )
+            const SizedBox(width: 10),
+            Text(
+              match.matchType.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9, color: kForeground.withValues(alpha: 0.2)),
+            ),
           ],
         ),
+        Text(
+          '#${match.matchNumber}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w900, color: kForeground.withValues(alpha: 0.3)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVS(BuildContext context, bool isCompleted) {
+    return Container(
+      width: 40,
+      alignment: Alignment.center,
+      child: Text(
+        'VS',
+        style: TextStyle(
+          color: isCompleted ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.1),
+          fontWeight: FontWeight.w900,
+          fontSize: isHighlighted ? 18 : 14,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
+}
+
+class _TeamInfo extends StatelessWidget {
+  final String name;
+  final Color color;
+  final int? score;
+  final bool isWinner;
+  final bool isLarge;
+  final bool isLeft;
+
+  const _TeamInfo({
+    required this.name,
+    required this.color,
+    this.score,
+    this.isWinner = false,
+    this.isLarge = false,
+    required this.isLeft,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            name.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: color.withValues(alpha: score != null && !isWinner ? 0.4 : 1.0),
+              fontWeight: isWinner ? FontWeight.w900 : FontWeight.w700,
+              fontSize: isLarge ? 18 : 14,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (score != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '$score',
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                color: isWinner ? Colors.white : kForegroundMuted.withValues(alpha: 0.5),
+                fontSize: isLarge ? 32 : 24,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PulseIndicator extends StatefulWidget {
+  final Color color;
+  const _PulseIndicator({required this.color});
+
+  @override
+  State<_PulseIndicator> createState() => _PulseIndicatorState();
+}
+
+class _PulseIndicatorState extends State<_PulseIndicator> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.4, end: 1.0).animate(_controller),
+      child: Container(
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
       ),
     );
   }

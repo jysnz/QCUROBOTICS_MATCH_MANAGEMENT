@@ -73,60 +73,143 @@ class _RankingTableState extends State<RankingTable> {
 
     if (_rankings.isEmpty) {
       return Center(
-        child: Text('No rankings available.', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.leaderboard_outlined, color: Colors.white.withValues(alpha: 0.1), size: 48),
+            const SizedBox(height: 16),
+            Text('RANKING SYSTEM OFFLINE', style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 2)),
+            const SizedBox(height: 4),
+            Text('No data recorded for this tournament yet.', style: TextStyle(color: Colors.white.withValues(alpha: 0.1), fontSize: 11)),
+          ],
+        ),
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: TechnicalCard(
-        padding: EdgeInsets.zero,
-        child: DataTable(
-          headingTextStyle: const TextStyle(color: kAccent, fontWeight: FontWeight.w800, fontSize: 12),
-          dataTextStyle: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
-          dividerThickness: 0.5,
-          columnSpacing: 24,
-          columns: const [
-            DataColumn(label: Text('RANK')),
-            DataColumn(label: Text('TEAM')),
-            DataColumn(label: Text('WP')),
-            DataColumn(label: Text('AP')),
-            DataColumn(label: Text('SP')),
-            DataColumn(label: Text('W-L-T')),
-            DataColumn(label: Text('PLAYED')),
-          ],
-          rows: List.generate(_rankings.length, (index) {
-            final r = _rankings[index];
-            final rank = index + 1;
-            final isTop3 = rank <= 3;
-            
-            return DataRow(
-              color: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                if (rank == 1) return const Color(0xFFFFD700).withValues(alpha: 0.1); // Gold
-                if (rank == 2) return const Color(0xFFC0C0C0).withValues(alpha: 0.1); // Silver
-                if (rank == 3) return const Color(0xFFCD7F32).withValues(alpha: 0.1); // Bronze
-                return null;
-              }),
-              cells: [
-                DataCell(
-                  Text(
-                    '#$rank',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: isTop3 ? kAccent : Colors.white70,
-                    )
-                  )
-                ),
-                DataCell(Text(r.teamName ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold))),
-                DataCell(Text('${r.wp.toStringAsFixed(0)}', style: const TextStyle(color: kAccent, fontWeight: FontWeight.bold))),
-                DataCell(Text('${r.ap.toStringAsFixed(1)}')),
-                DataCell(Text('${r.sp.toStringAsFixed(1)}')),
-                DataCell(Text('${r.wins}-${r.losses}-${r.ties}', style: const TextStyle(color: Colors.white54))),
-                DataCell(Text('${r.matchesPlayed}', style: const TextStyle(color: Colors.white54))),
-              ],
-            );
-          }),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildHeaderRow(),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: _rankings.length,
+            itemBuilder: (context, index) {
+              final r = _rankings[index];
+              return _RankingRow(ranking: r, rank: index + 1);
+            },
+          ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildHeaderRow() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: kSurface.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: const Row(
+        children: [
+          SizedBox(width: 40, child: Text('RK', style: _headerStyle)),
+          Expanded(child: Text('TEAM IDENTITY', style: _headerStyle)),
+          SizedBox(width: 55, child: Text('WP', style: _headerStyle, textAlign: TextAlign.center)),
+          SizedBox(width: 55, child: Text('AP', style: _headerStyle, textAlign: TextAlign.center)),
+          SizedBox(width: 55, child: Text('SP', style: _headerStyle, textAlign: TextAlign.center)),
+          SizedBox(width: 70, child: Text('W-L-T', style: _headerStyle, textAlign: TextAlign.center)),
+        ],
+      ),
+    );
+  }
+
+  static const _headerStyle = TextStyle(
+    color: kAccent, 
+    fontSize: 9, 
+    fontWeight: FontWeight.w900, 
+    letterSpacing: 1.0
+  );
+}
+
+class _RankingRow extends StatelessWidget {
+  final Ranking ranking;
+  final int rank;
+
+  const _RankingRow({required this.ranking, required this.rank});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isTop3 = rank <= 3;
+    Color rankColor = Colors.white38;
+    if (rank == 1) rankColor = const Color(0xFFFFD700);
+    if (rank == 2) rankColor = const Color(0xFFC0C0C0);
+    if (rank == 3) rankColor = const Color(0xFFCD7F32);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isTop3 ? rankColor.withValues(alpha: 0.05) : kSurface.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isTop3 ? rankColor.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.03)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40, 
+            child: Text(
+              '#$rank', 
+              style: TextStyle(
+                color: isTop3 ? rankColor : Colors.white24, 
+                fontWeight: FontWeight.w900, 
+                fontSize: 12
+              )
+            )
+          ),
+          Expanded(
+            child: Text(
+              (ranking.teamName ?? 'UNKNOWN').toUpperCase(), 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.5),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
+          ),
+          SizedBox(
+            width: 55, 
+            child: Text(
+              ranking.wp.toStringAsFixed(2), 
+              style: const TextStyle(color: kAccent, fontWeight: FontWeight.w900, fontSize: 12),
+              textAlign: TextAlign.center,
+            )
+          ),
+          SizedBox(
+            width: 55, 
+            child: Text(
+              ranking.ap.toStringAsFixed(2), 
+              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 11),
+              textAlign: TextAlign.center,
+            )
+          ),
+          SizedBox(
+            width: 55, 
+            child: Text(
+              ranking.sp.toStringAsFixed(2), 
+              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 11),
+              textAlign: TextAlign.center,
+            )
+          ),
+          SizedBox(
+            width: 70, 
+            child: Text(
+              '${ranking.wins}-${ranking.losses}-${ranking.ties}', 
+              style: const TextStyle(color: Colors.white38, fontWeight: FontWeight.w500, fontSize: 11),
+              textAlign: TextAlign.center,
+            )
+          ),
+        ],
       ),
     );
   }
