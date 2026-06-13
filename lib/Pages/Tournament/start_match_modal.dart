@@ -27,6 +27,16 @@ class _StartMatchModalState extends State<StartMatchModal> {
   bool _blueAwp = false;
   String _autonomousBonus = 'None';
 
+  // Match Breakdown State
+  int _longGoal1Red = 0;
+  int _longGoal1Blue = 0;
+  int _longGoal2Red = 0;
+  int _longGoal2Blue = 0;
+  int _midGoalRed = 0;
+  int _midGoalBlue = 0;
+  int _parkRed = 0;
+  int _parkBlue = 0;
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +103,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
         right: 24,
       ),
       child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -200,6 +211,50 @@ class _StartMatchModalState extends State<StartMatchModal> {
                     : null,
                 ),
               ],
+            ),
+            const SizedBox(height: 32),
+            const TechnicalSectionHeader(label: 'MATCH BREAKDOWN', color: Colors.white24, topPadding: 0),
+            const SizedBox(height: 12),
+            TechnicalCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  _BreakdownRow(
+                    imagePath: 'Images/long_goal.png',
+                    redValue: _longGoal1Red,
+                    blueValue: _longGoal1Blue,
+                    onRedChanged: (v) => setState(() => _longGoal1Red = v),
+                    onBlueChanged: (v) => setState(() => _longGoal1Blue = v),
+                    enabled: widget.matchData.status != 'Completed',
+                  ),
+                  Divider(color: Colors.white.withValues(alpha: 0.05), height: 24),
+                  _BreakdownRow(
+                    imagePath: 'Images/long_goal.png',
+                    redValue: _longGoal2Red,
+                    blueValue: _longGoal2Blue,
+                    onRedChanged: (v) => setState(() => _longGoal2Red = v),
+                    onBlueChanged: (v) => setState(() => _longGoal2Blue = v),
+                    enabled: widget.matchData.status != 'Completed',
+                  ),
+                  Divider(color: Colors.white.withValues(alpha: 0.05), height: 24),
+                  _BreakdownRow(
+                    imagePath: 'Images/middle_goal.png',
+                    redValue: _midGoalRed,
+                    blueValue: _midGoalBlue,
+                    onRedChanged: (v) => setState(() => _midGoalRed = v),
+                    onBlueChanged: (v) => setState(() => _midGoalBlue = v),
+                    enabled: widget.matchData.status != 'Completed',
+                  ),
+                  Divider(color: Colors.white.withValues(alpha: 0.05), height: 24),
+                  _ParkingRow(
+                    redValue: _parkRed,
+                    blueValue: _parkBlue,
+                    onRedChanged: (v) => setState(() => _parkRed = v),
+                    onBlueChanged: (v) => setState(() => _parkBlue = v),
+                    enabled: widget.matchData.status != 'Completed',
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
             if (widget.matchData.status != 'Completed')
@@ -363,6 +418,176 @@ class _ScoreInputCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BreakdownRow extends StatelessWidget {
+  final String imagePath;
+  final int redValue;
+  final int blueValue;
+  final ValueChanged<int> onRedChanged;
+  final ValueChanged<int> onBlueChanged;
+  final bool enabled;
+
+  const _BreakdownRow({
+    required this.imagePath,
+    required this.redValue,
+    required this.blueValue,
+    required this.onRedChanged,
+    required this.onBlueChanged,
+    required this.enabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _BreakdownCounter(
+          value: redValue,
+          onChanged: onRedChanged,
+          color: Colors.redAccent,
+          enabled: enabled,
+        ),
+        Expanded(
+          child: Center(
+            child: Image.asset(imagePath, height: 40, fit: BoxFit.contain),
+          ),
+        ),
+        _BreakdownCounter(
+          value: blueValue,
+          onChanged: onBlueChanged,
+          color: Colors.blueAccent,
+          enabled: enabled,
+        ),
+      ],
+    );
+  }
+}
+
+class _ParkingRow extends StatelessWidget {
+  final int redValue;
+  final int blueValue;
+  final ValueChanged<int> onRedChanged;
+  final ValueChanged<int> onBlueChanged;
+  final bool enabled;
+
+  const _ParkingRow({
+    required this.redValue,
+    required this.blueValue,
+    required this.onRedChanged,
+    required this.onBlueChanged,
+    required this.enabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Image.asset('Images/parking_red.png', height: 40, fit: BoxFit.contain),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _BreakdownCounter(
+                  value: redValue,
+                  onChanged: onRedChanged,
+                  color: Colors.redAccent,
+                  enabled: enabled,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 24),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Expanded(
+                child: _BreakdownCounter(
+                  value: blueValue,
+                  onChanged: onBlueChanged,
+                  color: Colors.blueAccent,
+                  enabled: enabled,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Image.asset('Images/parking_blue.png', height: 40, fit: BoxFit.contain),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BreakdownCounter extends StatelessWidget {
+  final int value;
+  final ValueChanged<int> onChanged;
+  final Color color;
+  final bool enabled;
+
+  const _BreakdownCounter({
+    required this.value,
+    required this.onChanged,
+    required this.color,
+    required this.enabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kBackground.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _CounterBtn(
+            icon: Icons.remove,
+            onTap: enabled && value > 0 ? () => onChanged(value - 1) : null,
+          ),
+          Container(
+            width: 32,
+            alignment: Alignment.center,
+            child: Text(
+              '$value',
+              style: TextStyle(
+                color: value > 0 ? color : Colors.white24,
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          _CounterBtn(
+            icon: Icons.add,
+            onTap: enabled ? () => onChanged(value + 1) : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CounterBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _CounterBtn({required this.icon, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Icon(icon, size: 16, color: onTap == null ? Colors.white10 : Colors.white54),
       ),
     );
   }
