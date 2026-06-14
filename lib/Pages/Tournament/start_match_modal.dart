@@ -228,37 +228,51 @@ class _StartMatchModalState extends State<StartMatchModal> {
                 children: [
                   // Long Goal 1
                   _BreakdownRow(
-                    image: const BreakdownImage(path: 'Images/long_goal.png', height: 80),
-                    leftContent: _BreakdownCounter(
-                      value: _longGoal1Red,
-                      onChanged: (v) => setState(() => _longGoal1Red = v),
-                      color: Colors.redAccent,
-                      enabled: widget.matchData.status != 'Completed',
+                    image: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const BreakdownImage(path: 'Images/long_goal.png', height: 80),
+                        const SizedBox(height: 12),
+                        _TripleButtonControl(
+                          onLeft: () => setState(() => _longGoal1Red++),
+                          onCenter: () => setState(() {
+                            _longGoal1Red = 0;
+                            _longGoal1Blue = 0;
+                          }),
+                          onRight: () => setState(() => _longGoal1Blue++),
+                          enabled: widget.matchData.status != 'Completed',
+                        ),
+                      ],
                     ),
-                    rightContent: _BreakdownCounter(
-                      value: _longGoal1Blue,
-                      onChanged: (v) => setState(() => _longGoal1Blue = v),
-                      color: Colors.blueAccent,
-                      enabled: widget.matchData.status != 'Completed',
-                    ),
+                    leftContent: _ValueDisplay(value: _longGoal1Red, color: Colors.redAccent),
+                    rightContent: _ValueDisplay(value: _longGoal1Blue, color: Colors.blueAccent),
                   ),
                   
+                  const SizedBox(height: 16),
+
                   // Long Goal 2
                   _BreakdownRow(
-                    image: const BreakdownImage(path: 'Images/long_goal.png', height: 80),
-                    leftContent: _BreakdownCounter(
-                      value: _longGoal2Red,
-                      onChanged: (v) => setState(() => _longGoal2Red = v),
-                      color: Colors.redAccent,
-                      enabled: widget.matchData.status != 'Completed',
+                    image: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const BreakdownImage(path: 'Images/long_goal.png', height: 80),
+                        const SizedBox(height: 12),
+                        _TripleButtonControl(
+                          onLeft: () => setState(() => _longGoal2Red++),
+                          onCenter: () => setState(() {
+                            _longGoal2Red = 0;
+                            _longGoal2Blue = 0;
+                          }),
+                          onRight: () => setState(() => _longGoal2Blue++),
+                          enabled: widget.matchData.status != 'Completed',
+                        ),
+                      ],
                     ),
-                    rightContent: _BreakdownCounter(
-                      value: _longGoal2Blue,
-                      onChanged: (v) => setState(() => _longGoal2Blue = v),
-                      color: Colors.blueAccent,
-                      enabled: widget.matchData.status != 'Completed',
-                    ),
+                    leftContent: _ValueDisplay(value: _longGoal2Red, color: Colors.redAccent),
+                    rightContent: _ValueDisplay(value: _longGoal2Blue, color: Colors.blueAccent),
                   ),
+                  
+                  const SizedBox(height: 16),
                   
                   // Middle Goal
                   _BreakdownRow(
@@ -658,6 +672,134 @@ class _CounterBtn extends StatelessWidget {
           color: onTap == null 
             ? Colors.white.withValues(alpha: 0.03) 
             : (color?.withValues(alpha: 0.8) ?? Colors.white38)
+        ),
+      ),
+    );
+  }
+}
+
+class _ValueDisplay extends StatelessWidget {
+  final int value;
+  final Color color;
+
+  const _ValueDisplay({required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isActive = value > 0;
+    return Container(
+      width: 48,
+      height: 48,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isActive ? color.withValues(alpha: 0.1) : kBackground.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive ? color.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Text(
+        '$value',
+        style: TextStyle(
+          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.1),
+          fontWeight: FontWeight.w900,
+          fontSize: 20,
+        ),
+      ),
+    );
+  }
+}
+
+class _TripleButtonControl extends StatelessWidget {
+  final VoidCallback? onLeft;
+  final VoidCallback? onCenter;
+  final VoidCallback? onRight;
+  final bool enabled;
+
+  const _TripleButtonControl({
+    this.onLeft,
+    this.onCenter,
+    this.onRight,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: kSurface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ControlBtn(
+            icon: Icons.play_arrow_rounded, 
+            isLeft: true, 
+            onTap: onLeft, 
+            enabled: enabled,
+            color: Colors.redAccent,
+          ),
+          const SizedBox(width: 4),
+          _ControlBtn(
+            icon: Icons.close_rounded, 
+            onTap: onCenter, 
+            enabled: enabled,
+            color: Colors.white24,
+          ),
+          const SizedBox(width: 4),
+          _ControlBtn(
+            icon: Icons.play_arrow_rounded, 
+            onTap: onRight, 
+            enabled: enabled,
+            color: Colors.blueAccent,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ControlBtn extends StatelessWidget {
+  final IconData icon;
+  final bool isLeft;
+  final VoidCallback? onTap;
+  final bool enabled;
+  final Color color;
+
+  const _ControlBtn({
+    required this.icon,
+    this.isLeft = false,
+    this.onTap,
+    this.enabled = true,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Transform.rotate(
+            angle: isLeft ? 3.14159 : 0,
+            child: Icon(
+              icon, 
+              size: 16, 
+              color: enabled ? color : color.withValues(alpha: 0.2),
+            ),
+          ),
         ),
       ),
     );
