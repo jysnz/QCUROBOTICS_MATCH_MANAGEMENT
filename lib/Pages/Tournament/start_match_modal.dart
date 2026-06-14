@@ -228,19 +228,21 @@ class _StartMatchModalState extends State<StartMatchModal> {
                 children: [
                   // Long Goal 1
                   _BreakdownRow(
-                    image: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    image: Stack(
+                      alignment: Alignment.center,
                       children: [
                         const BreakdownImage(path: 'Images/long_goal.png', height: 80),
-                        const SizedBox(height: 12),
-                        _TripleButtonControl(
-                          onLeft: () => setState(() => _longGoal1Red++),
-                          onCenter: () => setState(() {
-                            _longGoal1Red = 0;
-                            _longGoal1Blue = 0;
-                          }),
-                          onRight: () => setState(() => _longGoal1Blue++),
-                          enabled: widget.matchData.status != 'Completed',
+                        Positioned(
+                          bottom: 0,
+                          child: _TripleButtonControl(
+                            onLeft: () => setState(() => _longGoal1Red++),
+                            onCenter: () => setState(() {
+                              _longGoal1Red = 0;
+                              _longGoal1Blue = 0;
+                            }),
+                            onRight: () => setState(() => _longGoal1Blue++),
+                            enabled: widget.matchData.status != 'Completed',
+                          ),
                         ),
                       ],
                     ),
@@ -248,23 +250,25 @@ class _StartMatchModalState extends State<StartMatchModal> {
                     rightContent: _ValueDisplay(value: _longGoal1Blue, color: Colors.blueAccent),
                   ),
                   
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Long Goal 2
                   _BreakdownRow(
-                    image: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    image: Stack(
+                      alignment: Alignment.center,
                       children: [
                         const BreakdownImage(path: 'Images/long_goal.png', height: 80),
-                        const SizedBox(height: 12),
-                        _TripleButtonControl(
-                          onLeft: () => setState(() => _longGoal2Red++),
-                          onCenter: () => setState(() {
-                            _longGoal2Red = 0;
-                            _longGoal2Blue = 0;
-                          }),
-                          onRight: () => setState(() => _longGoal2Blue++),
-                          enabled: widget.matchData.status != 'Completed',
+                        Positioned(
+                          bottom: 0,
+                          child: _TripleButtonControl(
+                            onLeft: () => setState(() => _longGoal2Red++),
+                            onCenter: () => setState(() {
+                              _longGoal2Red = 0;
+                              _longGoal2Blue = 0;
+                            }),
+                            onRight: () => setState(() => _longGoal2Blue++),
+                            enabled: widget.matchData.status != 'Completed',
+                          ),
                         ),
                       ],
                     ),
@@ -272,7 +276,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                     rightContent: _ValueDisplay(value: _longGoal2Blue, color: Colors.blueAccent),
                   ),
                   
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   
                   // Middle Goal
                   _BreakdownRow(
@@ -715,46 +719,88 @@ class _TripleButtonControl extends StatelessWidget {
   final VoidCallback? onCenter;
   final VoidCallback? onRight;
   final bool enabled;
+  final double iconSize;
+  final double buttonSize;
+  final double gap;
+  final double leftXOffset;
+  final double leftYOffset;
+  final double centerXOffset;
+  final double centerYOffset;
+  final double rightXOffset;
+  final double rightYOffset;
 
   const _TripleButtonControl({
     this.onLeft,
     this.onCenter,
     this.onRight,
     this.enabled = true,
+    this.iconSize = 60,
+    this.buttonSize = 44,
+    this.gap = 0,
+    this.leftXOffset = 0,
+    this.leftYOffset = 0,
+    this.centerXOffset = 0,
+    this.centerYOffset = 0,
+    this.rightXOffset = 0,
+    this.rightYOffset = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      decoration: BoxDecoration(
-        color: kSurface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    // Calculate total width based on button size and gap (supports negative gaps)
+    final double totalWidth = (buttonSize * 3) + (gap * 2);
+    
+    return SizedBox(
+      width: totalWidth,
+      height: buttonSize,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          _ControlBtn(
-            icon: Icons.play_arrow_rounded, 
-            isLeft: true, 
-            onTap: onLeft, 
-            enabled: enabled,
-            color: Colors.redAccent,
+          // Left Button
+          Positioned(
+            left: 0,
+            top: 0,
+            child: _ControlBtn(
+              icon: Icons.play_arrow_rounded, 
+              isLeft: true, 
+              onTap: onLeft, 
+              enabled: enabled,
+              color: Colors.redAccent,
+              iconSize: iconSize,
+              size: buttonSize,
+              xOffset: leftXOffset,
+              yOffset: leftYOffset,
+            ),
           ),
-          const SizedBox(width: 4),
-          _ControlBtn(
-            icon: Icons.close_rounded, 
-            onTap: onCenter, 
-            enabled: enabled,
-            color: Colors.white24,
+          // Center Button
+          Positioned(
+            left: buttonSize + gap,
+            top: 0,
+            child: _ControlBtn(
+              icon: Icons.close_rounded, 
+              onTap: onCenter, 
+              enabled: enabled,
+              color: Colors.white,
+              iconSize: iconSize,
+              size: buttonSize,
+              xOffset: centerXOffset,
+              yOffset: centerYOffset,
+            ),
           ),
-          const SizedBox(width: 4),
-          _ControlBtn(
-            icon: Icons.play_arrow_rounded, 
-            onTap: onRight, 
-            enabled: enabled,
-            color: Colors.blueAccent,
+          // Right Button
+          Positioned(
+            left: (buttonSize * 2) + (gap * 2),
+            top: 0,
+            child: _ControlBtn(
+              icon: Icons.play_arrow_rounded, 
+              onTap: onRight, 
+              enabled: enabled,
+              color: Colors.blueAccent,
+              iconSize: iconSize,
+              size: buttonSize,
+              xOffset: rightXOffset,
+              yOffset: rightYOffset,
+            ),
           ),
         ],
       ),
@@ -768,6 +814,10 @@ class _ControlBtn extends StatelessWidget {
   final VoidCallback? onTap;
   final bool enabled;
   final Color color;
+  final double iconSize;
+  final double size;
+  final double xOffset;
+  final double yOffset;
 
   const _ControlBtn({
     required this.icon,
@@ -775,32 +825,49 @@ class _ControlBtn extends StatelessWidget {
     this.onTap,
     this.enabled = true,
     required this.color,
+    this.iconSize = 32,
+    this.size = 44,
+    this.xOffset = 0,
+    this.yOffset = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-          ),
-          child: Transform.rotate(
-            angle: isLeft ? 3.14159 : 0,
-            child: Icon(
-              icon, 
-              size: 16, 
-              color: enabled ? color : color.withValues(alpha: 0.2),
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // The Icon (Visual)
+          Positioned(
+            left: xOffset - (iconSize / 2) + (size / 2),
+            top: yOffset - (iconSize / 2) + (size / 2),
+            child: IgnorePointer(
+              child: Transform.rotate(
+                angle: isLeft ? 3.14159 : 0,
+                child: Icon(
+                  icon, 
+                  size: iconSize, 
+                  color: enabled ? color : color.withValues(alpha: 0.1),
+                ),
+              ),
             ),
           ),
-        ),
+          // The Tap Target
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: enabled ? onTap : null,
+              borderRadius: BorderRadius.circular(size / 2),
+              child: SizedBox(
+                width: size,
+                height: size,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
