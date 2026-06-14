@@ -153,6 +153,8 @@ class TournamentService {
     int blueLowerGoalsControlled = 0,
     int redParkedRobots = 0,
     int blueParkedRobots = 0,
+    bool redDisqualified = false,
+    bool blueDisqualified = false,
   }) async {
     // 1. Submit the score and breakdown stats
     final response = await _client.from('matches').update({
@@ -171,6 +173,8 @@ class TournamentService {
       'blue_lower_goals_controlled': blueLowerGoalsControlled,
       'red_parked_robots': redParkedRobots,
       'blue_parked_robots': blueParkedRobots,
+      'red_disqualified': redDisqualified,
+      'blue_disqualified': blueDisqualified,
       'status': 'Completed'
     }).eq('id', matchId).select('tournament_id, match_type').single();
 

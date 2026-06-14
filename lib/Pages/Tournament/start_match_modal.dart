@@ -34,6 +34,8 @@ class _StartMatchModalState extends State<StartMatchModal> {
 
   bool _redAwp = false;
   bool _blueAwp = false;
+  bool _redDisqualified = false;
+  bool _blueDisqualified = false;
   String _autonomousBonus = 'None';
 
   // Match Breakdown State
@@ -64,6 +66,8 @@ class _StartMatchModalState extends State<StartMatchModal> {
       _blueScoreController.text = widget.matchData.blueScore.toString();
       _redAwp = widget.matchData.redAwp;
       _blueAwp = widget.matchData.blueAwp;
+      _redDisqualified = widget.matchData.redDisqualified;
+      _blueDisqualified = widget.matchData.blueDisqualified;
       _autonomousBonus = widget.matchData.autonomousBonus;
     } else {
       _recalculateScores();
@@ -133,6 +137,8 @@ class _StartMatchModalState extends State<StartMatchModal> {
         blueLowerGoalsControlled: blueLowerGoalsControlled,
         redParkedRobots: redParkedRobots,
         blueParkedRobots: blueParkedRobots,
+        redDisqualified: _redDisqualified,
+        blueDisqualified: _blueDisqualified,
       );
       await _service.completeTournamentIfFinished(
         widget.matchData.tournamentId,
@@ -238,14 +244,38 @@ class _StartMatchModalState extends State<StartMatchModal> {
                         controller: _redScoreController,
                         enabled: widget.matchData.status != 'Completed',
                         readOnly: true,
+                        isDisqualified: _redDisqualified,
                       ),
                       const SizedBox(height: 12),
                       _AwpCheckbox(
                         label: 'Earned AWP',
                         color: Colors.redAccent,
                         value: _redAwp,
-                        onChanged: widget.matchData.status != 'Completed'
+                        onChanged: widget.matchData.status != 'Completed' && !_redDisqualified
                             ? (val) => setState(() => _redAwp = val ?? false)
+                            : null,
+                      ),
+                      const SizedBox(height: 8),
+                      _AwpCheckbox(
+                        label: 'Disqualified',
+                        color: Colors.orangeAccent,
+                        value: _redDisqualified,
+                        onChanged: widget.matchData.status != 'Completed'
+                            ? (val) => _updateScoreBreakdown(() {
+                                _redDisqualified = val ?? false;
+                                if (_redDisqualified) {
+                                  _redAwp = false;
+                                  if (_autonomousBonus == 'Red') _autonomousBonus = 'None';
+                                  // Reset breakdown data for disqualified team
+                                  _longGoal1Red = 0;
+                                  _longGoal2Red = 0;
+                                  _midGoal1Red = 0;
+                                  _midGoal2Red = 0;
+                                  _parkRed = 0;
+                                  if (_longGoal1Selection == _LongGoalSelection.left) _longGoal1Selection = _LongGoalSelection.none;
+                                  if (_longGoal2Selection == _LongGoalSelection.left) _longGoal2Selection = _LongGoalSelection.none;
+                                }
+                              })
                             : null,
                       ),
                     ],
@@ -272,14 +302,38 @@ class _StartMatchModalState extends State<StartMatchModal> {
                         controller: _blueScoreController,
                         enabled: widget.matchData.status != 'Completed',
                         readOnly: true,
+                        isDisqualified: _blueDisqualified,
                       ),
                       const SizedBox(height: 12),
                       _AwpCheckbox(
                         label: 'Earned AWP',
                         color: Colors.blueAccent,
                         value: _blueAwp,
-                        onChanged: widget.matchData.status != 'Completed'
+                        onChanged: widget.matchData.status != 'Completed' && !_blueDisqualified
                             ? (val) => setState(() => _blueAwp = val ?? false)
+                            : null,
+                      ),
+                      const SizedBox(height: 8),
+                      _AwpCheckbox(
+                        label: 'Disqualified',
+                        color: Colors.orangeAccent,
+                        value: _blueDisqualified,
+                        onChanged: widget.matchData.status != 'Completed'
+                            ? (val) => _updateScoreBreakdown(() {
+                                _blueDisqualified = val ?? false;
+                                if (_blueDisqualified) {
+                                  _blueAwp = false;
+                                  if (_autonomousBonus == 'Blue') _autonomousBonus = 'None';
+                                  // Reset breakdown data for disqualified team
+                                  _longGoal1Blue = 0;
+                                  _longGoal2Blue = 0;
+                                  _midGoal1Blue = 0;
+                                  _midGoal2Blue = 0;
+                                  _parkBlue = 0;
+                                  if (_longGoal1Selection == _LongGoalSelection.right) _longGoal1Selection = _LongGoalSelection.none;
+                                  if (_longGoal2Selection == _LongGoalSelection.right) _longGoal2Selection = _LongGoalSelection.none;
+                                }
+                              })
                             : null,
                       ),
                     ],
@@ -301,7 +355,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                   label: 'RED',
                   isSelected: _autonomousBonus == 'Red',
                   color: Colors.redAccent,
-                  onTap: widget.matchData.status != 'Completed'
+                  onTap: widget.matchData.status != 'Completed' && !_redDisqualified
                       ? () => _updateScoreBreakdown(() {
                           _autonomousBonus = 'Red';
                         })
@@ -323,7 +377,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                   label: 'BLUE',
                   isSelected: _autonomousBonus == 'Blue',
                   color: Colors.blueAccent,
-                  onTap: widget.matchData.status != 'Completed'
+                  onTap: widget.matchData.status != 'Completed' && !_blueDisqualified
                       ? () => _updateScoreBreakdown(() {
                           _autonomousBonus = 'Blue';
                         })
@@ -355,15 +409,15 @@ class _StartMatchModalState extends State<StartMatchModal> {
                           child: _TripleButtonControl(
                             gap: -8,
                             selection: _longGoal1Selection,
-                            onLeft: () => _updateScoreBreakdown(() {
+                            onLeft: widget.matchData.status != 'Completed' && !_redDisqualified ? () => _updateScoreBreakdown(() {
                               _longGoal1Selection = _LongGoalSelection.left;
-                            }),
-                            onCenter: () => _updateScoreBreakdown(() {
+                            }) : null,
+                            onCenter: widget.matchData.status != 'Completed' ? () => _updateScoreBreakdown(() {
                               _longGoal1Selection = _LongGoalSelection.center;
-                            }),
-                            onRight: () => _updateScoreBreakdown(() {
+                            }) : null,
+                            onRight: widget.matchData.status != 'Completed' && !_blueDisqualified ? () => _updateScoreBreakdown(() {
                               _longGoal1Selection = _LongGoalSelection.right;
-                            }),
+                            }) : null,
                             enabled: widget.matchData.status != 'Completed',
                           ),
                         ),
@@ -375,7 +429,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                       onChanged: (v) => _updateScoreBreakdown(() {
                         _longGoal1Red = v;
                       }),
-                      enabled: widget.matchData.status != 'Completed',
+                      enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
                     ),
                     rightContent: _ValueDisplay(
                       value: _longGoal1Blue,
@@ -383,7 +437,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                       onChanged: (v) => _updateScoreBreakdown(() {
                         _longGoal1Blue = v;
                       }),
-                      enabled: widget.matchData.status != 'Completed',
+                      enabled: widget.matchData.status != 'Completed' && !_blueDisqualified,
                     ),
                   ),
 
@@ -403,15 +457,15 @@ class _StartMatchModalState extends State<StartMatchModal> {
                           child: _TripleButtonControl(
                             gap: -8,
                             selection: _longGoal2Selection,
-                            onLeft: () => _updateScoreBreakdown(() {
+                            onLeft: widget.matchData.status != 'Completed' && !_redDisqualified ? () => _updateScoreBreakdown(() {
                               _longGoal2Selection = _LongGoalSelection.left;
-                            }),
-                            onCenter: () => _updateScoreBreakdown(() {
+                            }) : null,
+                            onCenter: widget.matchData.status != 'Completed' ? () => _updateScoreBreakdown(() {
                               _longGoal2Selection = _LongGoalSelection.center;
-                            }),
-                            onRight: () => _updateScoreBreakdown(() {
+                            }) : null,
+                            onRight: widget.matchData.status != 'Completed' && !_blueDisqualified ? () => _updateScoreBreakdown(() {
                               _longGoal2Selection = _LongGoalSelection.right;
-                            }),
+                            }) : null,
                             enabled: widget.matchData.status != 'Completed',
                           ),
                         ),
@@ -423,7 +477,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                       onChanged: (v) => _updateScoreBreakdown(() {
                         _longGoal2Red = v;
                       }),
-                      enabled: widget.matchData.status != 'Completed',
+                      enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
                     ),
                     rightContent: _ValueDisplay(
                       value: _longGoal2Blue,
@@ -431,7 +485,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                       onChanged: (v) => _updateScoreBreakdown(() {
                         _longGoal2Blue = v;
                       }),
-                      enabled: widget.matchData.status != 'Completed',
+                      enabled: widget.matchData.status != 'Completed' && !_blueDisqualified,
                     ),
                   ),
 
@@ -454,7 +508,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                             value: v,
                           ),
                           color: Colors.redAccent,
-                          enabled: widget.matchData.status != 'Completed',
+                          enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
                         ),
                         const SizedBox(height: 12),
                         _BreakdownCounter(
@@ -465,7 +519,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                             value: v,
                           ),
                           color: Colors.redAccent,
-                          enabled: widget.matchData.status != 'Completed',
+                          enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
                         ),
                       ],
                     ),
@@ -480,7 +534,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                             value: v,
                           ),
                           color: Colors.blueAccent,
-                          enabled: widget.matchData.status != 'Completed',
+                          enabled: widget.matchData.status != 'Completed' && !_blueDisqualified,
                         ),
                         const SizedBox(height: 12),
                         _BreakdownCounter(
@@ -491,7 +545,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                             value: v,
                           ),
                           color: Colors.blueAccent,
-                          enabled: widget.matchData.status != 'Completed',
+                          enabled: widget.matchData.status != 'Completed' && !_blueDisqualified,
                         ),
                       ],
                     ),
@@ -529,7 +583,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                                   _parkRed = v.clamp(0, 2);
                                 }),
                                 color: Colors.redAccent,
-                                enabled: widget.matchData.status != 'Completed',
+                                enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
                               ),
                             ),
                           ),
@@ -542,7 +596,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                                   _parkBlue = v.clamp(0, 2);
                                 }),
                                 color: Colors.blueAccent,
-                                enabled: widget.matchData.status != 'Completed',
+                                enabled: widget.matchData.status != 'Completed' && !_blueDisqualified,
                               ),
                             ),
                           ),
@@ -627,7 +681,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
   }
 
   void _recalculateScores() {
-    final redScore =
+    final redScore = _redDisqualified ? 0 : (
         _longGoalScore(
           alliance: _LongGoalSelection.left,
           redBlocks: _longGoal1Red,
@@ -653,8 +707,8 @@ class _StartMatchModalState extends State<StartMatchModal> {
           firstBlockPoints: _centerGoalBottomFirstBlockPoints,
         ) +
         _autonomousScore('Red') +
-        _parkingScore(_parkRed);
-    final blueScore =
+        _parkingScore(_parkRed));
+    final blueScore = _blueDisqualified ? 0 : (
         _longGoalScore(
           alliance: _LongGoalSelection.right,
           redBlocks: _longGoal1Red,
@@ -680,7 +734,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
           firstBlockPoints: _centerGoalBottomFirstBlockPoints,
         ) +
         _autonomousScore('Blue') +
-        _parkingScore(_parkBlue);
+        _parkingScore(_parkBlue));
 
     _setScoreText(_redScoreController, redScore);
     _setScoreText(_blueScoreController, blueScore);
@@ -883,6 +937,7 @@ class _ScoreInputCard extends StatelessWidget {
   final TextEditingController controller;
   final bool enabled;
   final bool readOnly;
+  final bool isDisqualified;
 
   const _ScoreInputCard({
     required this.teamName,
@@ -890,6 +945,7 @@ class _ScoreInputCard extends StatelessWidget {
     required this.controller,
     required this.enabled,
     this.readOnly = false,
+    this.isDisqualified = false,
   });
 
   @override
@@ -901,15 +957,15 @@ class _ScoreInputCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: isDisqualified ? Colors.orangeAccent.withValues(alpha: 0.1) : color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: color.withValues(alpha: 0.2)),
+              border: Border.all(color: isDisqualified ? Colors.orangeAccent.withValues(alpha: 0.2) : color.withValues(alpha: 0.2)),
             ),
             child: Text(
-              teamName.toUpperCase(),
+              isDisqualified ? 'DISQUALIFIED' : teamName.toUpperCase(),
               style: Theme.of(
                 context,
-              ).textTheme.labelSmall?.copyWith(color: color, fontSize: 8),
+              ).textTheme.labelSmall?.copyWith(color: isDisqualified ? Colors.orangeAccent : color, fontSize: 8),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -924,7 +980,11 @@ class _ScoreInputCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
-            ).textTheme.displayLarge?.copyWith(fontSize: 32),
+            ).textTheme.displayLarge?.copyWith(
+              fontSize: 32,
+              color: isDisqualified ? Colors.white24 : Colors.white,
+              decoration: isDisqualified ? TextDecoration.lineThrough : null,
+            ),
             decoration: InputDecoration(
               hintText: '00',
               hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.05)),

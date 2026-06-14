@@ -23,6 +23,8 @@ class TournamentMatch {
   final int blueLowerGoalsControlled;
   final int redParkedRobots;
   final int blueParkedRobots;
+  final bool redDisqualified;
+  final bool blueDisqualified;
 
   // Optional relations
   String? redTeamName;
@@ -51,6 +53,8 @@ class TournamentMatch {
     this.blueLowerGoalsControlled = 0,
     this.redParkedRobots = 0,
     this.blueParkedRobots = 0,
+    this.redDisqualified = false,
+    this.blueDisqualified = false,
     this.redTeamName,
     this.blueTeamName,
   });
@@ -87,6 +91,8 @@ class TournamentMatch {
       blueLowerGoalsControlled: json['blue_lower_goals_controlled'] ?? 0,
       redParkedRobots: json['red_parked_robots'] ?? 0,
       blueParkedRobots: json['blue_parked_robots'] ?? 0,
+      redDisqualified: json['red_disqualified'] ?? false,
+      blueDisqualified: json['blue_disqualified'] ?? false,
       redTeamName: json['red_team']?['team_name'],
       blueTeamName: json['blue_team']?['team_name'],
     );
