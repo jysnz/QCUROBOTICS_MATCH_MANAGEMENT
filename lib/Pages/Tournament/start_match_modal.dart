@@ -94,6 +94,26 @@ class _StartMatchModalState extends State<StartMatchModal> {
       return;
     }
 
+    // --- Calculate Breakdown Stats ---
+    
+    // Red Stats
+    final int redBlocksScored = _longGoal1Red + _longGoal2Red + _midGoal1Red + _midGoal2Red;
+    final int redLongGoalsControlled = 
+        (_longGoal1Selection == _LongGoalSelection.left ? 1 : 0) + 
+        (_longGoal2Selection == _LongGoalSelection.left ? 1 : 0);
+    final int redUpperGoalsControlled = (_midGoal1Red > _midGoal1Blue ? 1 : 0);
+    final int redLowerGoalsControlled = (_midGoal2Red > _midGoal2Blue ? 1 : 0);
+    final int redParkedRobots = _parkRed;
+
+    // Blue Stats
+    final int blueBlocksScored = _longGoal1Blue + _longGoal2Blue + _midGoal1Blue + _midGoal2Blue;
+    final int blueLongGoalsControlled = 
+        (_longGoal1Selection == _LongGoalSelection.right ? 1 : 0) + 
+        (_longGoal2Selection == _LongGoalSelection.right ? 1 : 0);
+    final int blueUpperGoalsControlled = (_midGoal1Blue > _midGoal1Red ? 1 : 0);
+    final int blueLowerGoalsControlled = (_midGoal2Blue > _midGoal2Red ? 1 : 0);
+    final int blueParkedRobots = _parkBlue;
+
     setState(() => _isSubmitting = true);
     try {
       await _service.submitMatchScore(
@@ -103,6 +123,16 @@ class _StartMatchModalState extends State<StartMatchModal> {
         redAwp: _redAwp,
         blueAwp: _blueAwp,
         autonomousBonus: _autonomousBonus,
+        redBlocksScored: redBlocksScored,
+        blueBlocksScored: blueBlocksScored,
+        redLongGoalsControlled: redLongGoalsControlled,
+        blueLongGoalsControlled: blueLongGoalsControlled,
+        redUpperGoalsControlled: redUpperGoalsControlled,
+        blueUpperGoalsControlled: blueUpperGoalsControlled,
+        redLowerGoalsControlled: redLowerGoalsControlled,
+        blueLowerGoalsControlled: blueLowerGoalsControlled,
+        redParkedRobots: redParkedRobots,
+        blueParkedRobots: blueParkedRobots,
       );
       await _service.completeTournamentIfFinished(
         widget.matchData.tournamentId,
@@ -150,12 +180,30 @@ class _StartMatchModalState extends State<StartMatchModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'MATCH #${widget.matchData.matchNumber}',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    letterSpacing: 1.0,
-                    fontSize: 18,
-                  ),
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        ),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Colors.white38),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${widget.matchData.matchType.toUpperCase()} MATCH #${widget.matchData.matchNumber}',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        letterSpacing: 1.0,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
                 ),
                 if (widget.matchData.status == 'Completed')
                   Container(

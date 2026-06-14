@@ -136,14 +136,41 @@ class TournamentService {
     return matches;
   }
 
-  Future<void> submitMatchScore(String matchId, int redScore, int blueScore, {bool redAwp = false, bool blueAwp = false, String autonomousBonus = 'None'}) async {
-    // 1. Submit the score
+  Future<void> submitMatchScore(
+    String matchId, 
+    int redScore, 
+    int blueScore, {
+    bool redAwp = false, 
+    bool blueAwp = false, 
+    String autonomousBonus = 'None',
+    int redBlocksScored = 0,
+    int blueBlocksScored = 0,
+    int redLongGoalsControlled = 0,
+    int blueLongGoalsControlled = 0,
+    int redUpperGoalsControlled = 0,
+    int blueUpperGoalsControlled = 0,
+    int redLowerGoalsControlled = 0,
+    int blueLowerGoalsControlled = 0,
+    int redParkedRobots = 0,
+    int blueParkedRobots = 0,
+  }) async {
+    // 1. Submit the score and breakdown stats
     final response = await _client.from('matches').update({
       'red_score': redScore,
       'blue_score': blueScore,
       'red_awp': redAwp,
       'blue_awp': blueAwp,
       'autonomous_bonus': autonomousBonus,
+      'red_blocks_scored': redBlocksScored,
+      'blue_blocks_scored': blueBlocksScored,
+      'red_long_goals_controlled': redLongGoalsControlled,
+      'blue_long_goals_controlled': blueLongGoalsControlled,
+      'red_upper_goals_controlled': redUpperGoalsControlled,
+      'blue_upper_goals_controlled': blueUpperGoalsControlled,
+      'red_lower_goals_controlled': redLowerGoalsControlled,
+      'blue_lower_goals_controlled': blueLowerGoalsControlled,
+      'red_parked_robots': redParkedRobots,
+      'blue_parked_robots': blueParkedRobots,
       'status': 'Completed'
     }).eq('id', matchId).select('tournament_id, match_type').single();
 
