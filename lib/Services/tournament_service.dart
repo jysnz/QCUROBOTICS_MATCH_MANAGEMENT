@@ -189,7 +189,7 @@ class TournamentService {
     // Check if all matches of the current type are completed
     final matchesResponse = await _client
         .from('matches')
-        .select('status')
+        .select('red_team_id, blue_team_id, red_score, blue_score, status')
         .eq('tournament_id', tournamentId)
         .eq('match_type', completedMatchType);
     
@@ -202,7 +202,39 @@ class TournamentService {
       } else if (completedMatchType == 'Semi-Final') {
         await _generateFinal(tournamentId);
       } else if (completedMatchType == 'Final') {
-        await completeTournamentIfFinished(tournamentId);
+        // --- BEST OF 3 LOGIC ---
+        // First team to have 2 wins (points) wins.
+        
+        if (matches.isEmpty) return;
+
+        final int team1Id = matches[0]['red_team_id'];
+        final int team2Id = matches[0]['blue_team_id'];
+        
+        int team1Wins = 0;
+        int team2Wins = 0;
+        
+        for (final m in matches) {
+          if (m['red_score'] > m['blue_score']) {
+            team1Wins++;
+          } else if (m['blue_score'] > m['red_score']) {
+            team2Wins++;
+          }
+        }
+        
+        // If someone won 2 matches, or we've already played 3 matches
+        if (team1Wins >= 2 || team2Wins >= 2 || matches.length >= 3) {
+          await completeTournamentIfFinished(tournamentId);
+        } else {
+          // Generate next match in the Best of 3 sequence
+          await _client.from('matches').insert({
+            'tournament_id': tournamentId,
+            'match_number': matches.length + 1,
+            'match_type': 'Final',
+            'red_team_id': team1Id,
+            'blue_team_id': team2Id,
+            'status': 'Pending'
+          });
+        }
       }
     }
   }
@@ -214,6 +246,7 @@ class TournamentService {
         .select('id')
         .eq('tournament_id', tournamentId)
         .eq('match_type', 'Semi-Final')
+        .limit(1)
         .maybeSingle();
     
     if (existing != null) return;
@@ -252,6 +285,7 @@ class TournamentService {
         .select('id')
         .eq('tournament_id', tournamentId)
         .eq('match_type', 'Final')
+        .limit(1)
         .maybeSingle();
     
     if (existing != null) return;

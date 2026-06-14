@@ -423,7 +423,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                         ),
                       ],
                     ),
-                    leftContent: _ValueDisplay(
+                    leftContent: _BreakdownCounter(
                       value: _longGoal1Red,
                       color: Colors.redAccent,
                       onChanged: (v) => _updateScoreBreakdown(() {
@@ -431,7 +431,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                       }),
                       enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
                     ),
-                    rightContent: _ValueDisplay(
+                    rightContent: _BreakdownCounter(
                       value: _longGoal1Blue,
                       color: Colors.blueAccent,
                       onChanged: (v) => _updateScoreBreakdown(() {
@@ -471,7 +471,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                         ),
                       ],
                     ),
-                    leftContent: _ValueDisplay(
+                    leftContent: _BreakdownCounter(
                       value: _longGoal2Red,
                       color: Colors.redAccent,
                       onChanged: (v) => _updateScoreBreakdown(() {
@@ -479,7 +479,7 @@ class _StartMatchModalState extends State<StartMatchModal> {
                       }),
                       enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
                     ),
-                    rightContent: _ValueDisplay(
+                    rightContent: _BreakdownCounter(
                       value: _longGoal2Blue,
                       color: Colors.blueAccent,
                       onChanged: (v) => _updateScoreBreakdown(() {
@@ -553,57 +553,69 @@ class _StartMatchModalState extends State<StartMatchModal> {
 
                   // Parking Zone
                   const SizedBox(height: 8),
-                  Column(
-                    children: [
-                      const Row(
-                        children: [
-                          Expanded(
-                            child: BreakdownImage(
-                              path: 'Images/parking_red.png',
-                              height: 80,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: BreakdownImage(
-                              path: 'Images/parking_blue.png',
-                              height: 80,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Center(
-                              child: _BreakdownCounter(
-                                value: _parkRed,
-                                onChanged: (v) => _updateScoreBreakdown(() {
-                                  _parkRed = v.clamp(0, 2);
-                                }),
-                                color: Colors.redAccent,
-                                enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        const Row(
+                          children: [
+                            SizedBox(width: 100),
+                            Expanded(
+                              child: Center(
+                                child: BreakdownImage(
+                                  path: 'Images/parking_red.png',
+                                  height: 80,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Center(
-                              child: _BreakdownCounter(
-                                value: _parkBlue,
-                                onChanged: (v) => _updateScoreBreakdown(() {
-                                  _parkBlue = v.clamp(0, 2);
-                                }),
-                                color: Colors.blueAccent,
-                                enabled: widget.matchData.status != 'Completed' && !_blueDisqualified,
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Center(
+                                child: BreakdownImage(
+                                  path: 'Images/parking_blue.png',
+                                  height: 80,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                            SizedBox(width: 100),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 100,
+                              child: Center(
+                                child: _BreakdownCounter(
+                                  value: _parkRed,
+                                  onChanged: (v) => _updateScoreBreakdown(() {
+                                    _parkRed = v.clamp(0, 2);
+                                  }),
+                                  color: Colors.redAccent,
+                                  enabled: widget.matchData.status != 'Completed' && !_redDisqualified,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: SizedBox()),
+                            SizedBox(
+                              width: 100,
+                              child: Center(
+                                child: _BreakdownCounter(
+                                  value: _parkBlue,
+                                  onChanged: (v) => _updateScoreBreakdown(() {
+                                    _parkBlue = v.clamp(0, 2);
+                                  }),
+                                  color: Colors.blueAccent,
+                                  enabled: widget.matchData.status != 'Completed' && !_blueDisqualified,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -1019,11 +1031,17 @@ class _BreakdownRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        leftContent,
+        SizedBox(
+          width: 100,
+          child: Center(child: leftContent),
+        ),
         const SizedBox(width: 8),
         Expanded(child: image),
         const SizedBox(width: 8),
-        rightContent,
+        SizedBox(
+          width: 100,
+          child: Center(child: rightContent),
+        ),
       ],
     );
   }
