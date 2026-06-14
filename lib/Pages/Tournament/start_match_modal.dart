@@ -231,10 +231,11 @@ class _StartMatchModalState extends State<StartMatchModal> {
                     image: Stack(
                       alignment: Alignment.center,
                       children: [
-                        const BreakdownImage(path: 'Images/long_goal.png', height: 80),
+                        const BreakdownImage(path: 'Images/long_goal_updated.png', height: 80),
                         Positioned(
                           bottom: 0,
                           child: _TripleButtonControl(
+                            gap: -8,
                             onLeft: () => setState(() => _longGoal1Red++),
                             onCenter: () => setState(() {
                               _longGoal1Red = 0;
@@ -246,8 +247,18 @@ class _StartMatchModalState extends State<StartMatchModal> {
                         ),
                       ],
                     ),
-                    leftContent: _ValueDisplay(value: _longGoal1Red, color: Colors.redAccent),
-                    rightContent: _ValueDisplay(value: _longGoal1Blue, color: Colors.blueAccent),
+                    leftContent: _ValueDisplay(
+                      value: _longGoal1Red, 
+                      color: Colors.redAccent,
+                      onChanged: (v) => setState(() => _longGoal1Red = v),
+                      enabled: widget.matchData.status != 'Completed',
+                    ),
+                    rightContent: _ValueDisplay(
+                      value: _longGoal1Blue, 
+                      color: Colors.blueAccent,
+                      onChanged: (v) => setState(() => _longGoal1Blue = v),
+                      enabled: widget.matchData.status != 'Completed',
+                    ),
                   ),
                   
                   const SizedBox(height: 12),
@@ -257,10 +268,11 @@ class _StartMatchModalState extends State<StartMatchModal> {
                     image: Stack(
                       alignment: Alignment.center,
                       children: [
-                        const BreakdownImage(path: 'Images/long_goal.png', height: 80),
+                        const BreakdownImage(path: 'Images/long_goal_updated.png', height: 80),
                         Positioned(
                           bottom: 0,
                           child: _TripleButtonControl(
+                            gap: -8,
                             onLeft: () => setState(() => _longGoal2Red++),
                             onCenter: () => setState(() {
                               _longGoal2Red = 0;
@@ -272,8 +284,18 @@ class _StartMatchModalState extends State<StartMatchModal> {
                         ),
                       ],
                     ),
-                    leftContent: _ValueDisplay(value: _longGoal2Red, color: Colors.redAccent),
-                    rightContent: _ValueDisplay(value: _longGoal2Blue, color: Colors.blueAccent),
+                    leftContent: _ValueDisplay(
+                      value: _longGoal2Red, 
+                      color: Colors.redAccent,
+                      onChanged: (v) => setState(() => _longGoal2Red = v),
+                      enabled: widget.matchData.status != 'Completed',
+                    ),
+                    rightContent: _ValueDisplay(
+                      value: _longGoal2Blue, 
+                      color: Colors.blueAccent,
+                      onChanged: (v) => setState(() => _longGoal2Blue = v),
+                      enabled: widget.matchData.status != 'Completed',
+                    ),
                   ),
                   
                   const SizedBox(height: 12),
@@ -660,8 +682,16 @@ class _CounterBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final Color? color;
+  final EdgeInsetsGeometry padding;
+  final double iconSize;
 
-  const _CounterBtn({required this.icon, this.onTap, this.color});
+  const _CounterBtn({
+    required this.icon, 
+    this.onTap, 
+    this.color,
+    this.padding = const EdgeInsets.all(8.0),
+    this.iconSize = 18,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -669,10 +699,10 @@ class _CounterBtn extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: padding,
         child: Icon(
           icon, 
-          size: 18, 
+          size: iconSize, 
           color: onTap == null 
             ? Colors.white.withValues(alpha: 0.03) 
             : (color?.withValues(alpha: 0.8) ?? Colors.white38)
@@ -685,30 +715,60 @@ class _CounterBtn extends StatelessWidget {
 class _ValueDisplay extends StatelessWidget {
   final int value;
   final Color color;
+  final ValueChanged<int>? onChanged;
+  final bool enabled;
 
-  const _ValueDisplay({required this.value, required this.color});
+  const _ValueDisplay({
+    required this.value, 
+    required this.color,
+    this.onChanged,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     final bool isActive = value > 0;
+    
     return Container(
-      width: 48,
-      height: 48,
-      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: isActive ? color.withValues(alpha: 0.1) : kBackground.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
+        color: isActive ? color.withValues(alpha: 0.05) : kBackground.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isActive ? color.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05),
+          color: isActive ? color.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05),
         ),
+        boxShadow: isActive ? [
+          BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 10, spreadRadius: -2)
+        ] : null,
       ),
-      child: Text(
-        '$value',
-        style: TextStyle(
-          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.1),
-          fontWeight: FontWeight.w900,
-          fontSize: 20,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _CounterBtn(
+            icon: Icons.remove_rounded,
+            onTap: enabled && value > 0 && onChanged != null ? () => onChanged!(value - 1) : null,
+            padding: const EdgeInsets.all(4),
+            iconSize: 14,
+          ),
+          Container(
+            width: 34,
+            alignment: Alignment.center,
+            child: Text(
+              '$value',
+              style: TextStyle(
+                color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.1),
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          _CounterBtn(
+            icon: Icons.add_rounded,
+            onTap: enabled && onChanged != null ? () => onChanged!(value + 1) : null,
+            color: color,
+            padding: const EdgeInsets.all(4),
+            iconSize: 14,
+          ),
+        ],
       ),
     );
   }
@@ -747,7 +807,6 @@ class _TripleButtonControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate total width based on button size and gap (supports negative gaps)
     final double totalWidth = (buttonSize * 3) + (gap * 2);
     
     return SizedBox(
@@ -756,7 +815,6 @@ class _TripleButtonControl extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Left Button
           Positioned(
             left: 0,
             top: 0,
@@ -765,14 +823,14 @@ class _TripleButtonControl extends StatelessWidget {
               isLeft: true, 
               onTap: onLeft, 
               enabled: enabled,
-              color: Colors.redAccent,
+              outlineColor: Colors.white,
+              activeColor: Colors.redAccent,
               iconSize: iconSize,
               size: buttonSize,
               xOffset: leftXOffset,
               yOffset: leftYOffset,
             ),
           ),
-          // Center Button
           Positioned(
             left: buttonSize + gap,
             top: 0,
@@ -780,14 +838,14 @@ class _TripleButtonControl extends StatelessWidget {
               icon: Icons.close_rounded, 
               onTap: onCenter, 
               enabled: enabled,
-              color: Colors.white,
+              outlineColor: Colors.white,
+              activeColor: Colors.black,
               iconSize: iconSize,
               size: buttonSize,
               xOffset: centerXOffset,
               yOffset: centerYOffset,
             ),
           ),
-          // Right Button
           Positioned(
             left: (buttonSize * 2) + (gap * 2),
             top: 0,
@@ -795,7 +853,8 @@ class _TripleButtonControl extends StatelessWidget {
               icon: Icons.play_arrow_rounded, 
               onTap: onRight, 
               enabled: enabled,
-              color: Colors.blueAccent,
+              outlineColor: Colors.blueAccent,
+              activeColor: Colors.blueAccent,
               iconSize: iconSize,
               size: buttonSize,
               xOffset: rightXOffset,
@@ -808,12 +867,13 @@ class _TripleButtonControl extends StatelessWidget {
   }
 }
 
-class _ControlBtn extends StatelessWidget {
+class _ControlBtn extends StatefulWidget {
   final IconData icon;
   final bool isLeft;
   final VoidCallback? onTap;
   final bool enabled;
-  final Color color;
+  final Color outlineColor;
+  final Color activeColor;
   final double iconSize;
   final double size;
   final double xOffset;
@@ -824,7 +884,8 @@ class _ControlBtn extends StatelessWidget {
     this.isLeft = false,
     this.onTap,
     this.enabled = true,
-    required this.color,
+    required this.outlineColor,
+    required this.activeColor,
     this.iconSize = 32,
     this.size = 44,
     this.xOffset = 0,
@@ -832,42 +893,64 @@ class _ControlBtn extends StatelessWidget {
   });
 
   @override
+  State<_ControlBtn> createState() => _ControlBtnState();
+}
+
+class _ControlBtnState extends State<_ControlBtn> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          // The Icon (Visual)
-          Positioned(
-            left: xOffset - (iconSize / 2) + (size / 2),
-            top: yOffset - (iconSize / 2) + (size / 2),
-            child: IgnorePointer(
-              child: Transform.rotate(
-                angle: isLeft ? 3.14159 : 0,
-                child: Icon(
-                  icon, 
-                  size: iconSize, 
-                  color: enabled ? color : color.withValues(alpha: 0.1),
+    return GestureDetector(
+      onTapDown: widget.enabled ? (_) => setState(() => _isPressed = true) : null,
+      onTapUp: widget.enabled ? (_) => setState(() => _isPressed = false) : null,
+      onTapCancel: widget.enabled ? () => setState(() => _isPressed = false) : null,
+      onTap: widget.enabled ? widget.onTap : null,
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: widget.xOffset - (widget.iconSize / 2) + (widget.size / 2),
+              top: widget.yOffset - (widget.iconSize / 2) + (widget.size / 2),
+              child: IgnorePointer(
+                child: Transform.rotate(
+                  angle: widget.isLeft ? 3.14159 : 0,
+                  child: Stack(
+                    children: [
+                      // Icon Outline (Stroke effect using 4 offset icons)
+                      if (!_isPressed) ...[
+                        for (double i = -1; i <= 1; i++)
+                          for (double j = -1; j <= 1; j++)
+                            if (i != 0 || j != 0)
+                              Positioned(
+                                left: i * 0.5,
+                                top: j * 0.5,
+                                child: Icon(
+                                  widget.icon,
+                                  size: widget.iconSize,
+                                  color: widget.enabled ? widget.outlineColor : widget.outlineColor.withValues(alpha: 0.1),
+                                ),
+                              ),
+                      ],
+                      // Main Icon
+                      Icon(
+                        widget.icon, 
+                        size: widget.iconSize, 
+                        color: !widget.enabled 
+                          ? Colors.transparent 
+                          : (_isPressed ? widget.activeColor : kBackground),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          // The Tap Target
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: enabled ? onTap : null,
-              borderRadius: BorderRadius.circular(size / 2),
-              child: SizedBox(
-                width: size,
-                height: size,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
